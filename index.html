@@ -120,7 +120,7 @@
             <h3><i class="ph ph-sparkle"></i> Como Funciona?</h3>
             <ul>
                 <li>Dispara ofertas da Shopee e Mercado Livre automaticamente no seu canal do Telegram.</li>
-                <li>Limpa mensagens antigas da semana para manter seu canal organizado.</li>
+                <li>Limpa mensagens antigas automaticamente para manter seu canal organizado.</li>
                 <li><b>Teste Grátis de 7 Dias:</b> Cadastre-se agora e teste todas as funções sem compromisso!</li>
             </ul>
         </div>
@@ -267,6 +267,26 @@
                         <option value="month">Por Mês</option>
                     </select>
                 </div>
+            </div>
+
+            <div class="section-divider">🧹 Limpeza Automática do Canal</div>
+            <div class="form-group">
+                <label>Apagar mensagens antigas do canal a cada:</label>
+                <select id="autoCleanInterval">
+                    <option value="1">A cada 1 Dia (Manter só o dia)</option>
+                    <option value="7" selected>A cada 7 Dias (Semanal)</option>
+                    <option value="15">A cada 15 Dias</option>
+                    <option value="30">A cada 30 Dias (Mensal)</option>
+                    <option value="60">A cada 2 Meses</option>
+                    <option value="90">A cada 3 Meses</option>
+                    <option value="never">Desativar Limpeza Automática</option>
+                </select>
+            </div>
+
+            <div class="section-divider">💬 Legenda & Legado das Ofertas</div>
+            <div class="form-group">
+                <label>Aviso de Validade na Mensagem</label>
+                <input type="text" id="offerValidityText" value="⚡ Oferta Limitada - Válida por Tempo Limitado!" placeholder="Ex: Oferta válida para esta semana!">
             </div>
 
             <div class="section-divider">🎯 Filtro de Ofertas e Categorias</div>
