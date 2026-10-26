@@ -22,7 +22,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
         body { background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; padding: 20px; display: flex; justify-content: center; align-items: center; }
         
-        .container { width: 100%; max-width: 520px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .container { width: 100%; max-width: 520px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
         
         .logo-area { text-align: center; margin-bottom: 20px; }
         .logo-area i { font-size: 48px; color: var(--primary); margin-bottom: 8px; }
@@ -34,7 +34,45 @@
         .form-group { margin-bottom: 14px; }
         label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
         input, select { width: 100%; padding: 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); font-size: 14px; outline: none; transition: border 0.2s; }
-        input:focus { border-color: var(--primary); }
+        input:focus, select:focus { border-color: var(--primary); }
+
+        .section-divider {
+            font-size: 11px;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin: 20px 0 10px 0;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 4px;
+            font-weight: 700;
+        }
+
+        /* Grid para os Dias da Semana */
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+        .day-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            background: var(--bg-input);
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            color: var(--text-main);
+        }
+        .day-item input { width: auto; cursor: pointer; }
+
+        .row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
 
         .btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; text-decoration: none; text-align: center; }
         .btn:hover { background: var(--primary-hover); }
@@ -118,7 +156,7 @@
         <button class="btn" onclick="fazerLogin()"><i class="ph ph-sign-in"></i> Entrar</button>
         
         <div class="link-switch">
-            <a onclick="trocarTela('landing')">← Voltar para a Início</a> | <a onclick="trocarTela('register')">Criar conta</a>
+            <a onclick="trocarTela('landing')">← Voltar para o Início</a> | <a onclick="trocarTela('register')">Criar conta</a>
         </div>
     </div>
 
@@ -183,8 +221,11 @@
             </a>
         </div>
 
-        <!-- Configurações -->
+        <!-- Configurações do Robô -->
         <div id="configSection">
+            
+            <div class="section-divider">🔑 Conexão Telegram & Afiliado</div>
+
             <div class="form-group">
                 <label><i class="ph ph-telegram-logo" style="color: #38bdf8;"></i> Token do Bot do Telegram</label>
                 <input type="text" id="botToken" placeholder="Ex: 8616829338:AAHHLfo...">
@@ -198,6 +239,47 @@
             <div class="form-group">
                 <label><i class="ph ph-link"></i> Seu Link de Afiliado Base</label>
                 <input type="text" id="affLink" placeholder="https://shope.ee/seu_link">
+            </div>
+
+            <div class="section-divider">📅 Dias de Funcionamento</div>
+            <label>Selecione os dias em que o robô deve disparar ofertas:</label>
+            <div class="days-grid">
+                <label class="day-item"><input type="checkbox" id="d_seg" checked> Seg</label>
+                <label class="day-item"><input type="checkbox" id="d_ter" checked> Ter</label>
+                <label class="day-item"><input type="checkbox" id="d_qua" checked> Qua</label>
+                <label class="day-item"><input type="checkbox" id="d_qui" checked> Qui</label>
+                <label class="day-item"><input type="checkbox" id="d_sex" checked> Sex</label>
+                <label class="day-item"><input type="checkbox" id="d_sab" checked> Sáb</label>
+                <label class="day-item"><input type="checkbox" id="d_dom" checked> Dom</label>
+            </div>
+
+            <div class="section-divider">⏱️ Limites & Frequência</div>
+            <div class="row-2">
+                <div class="form-group">
+                    <label>Máx. Produtos / Dia</label>
+                    <input type="number" id="maxDaily" value="20" min="1" max="150">
+                </div>
+                <div class="form-group">
+                    <label>Intervalo (Minutos)</label>
+                    <input type="number" id="intervalMin" value="30" min="5" max="360">
+                </div>
+            </div>
+
+            <div class="section-divider">🎯 Filtro de Ofertas e Categorias</div>
+            <div class="form-group">
+                <label>Categoria de Preferência</label>
+                <select id="offerCategory">
+                    <option value="all">🔥 Todas as Ofertas (Geral)</option>
+                    <option value="super_discounts">⚡ Apenas Descontos Altos (50%+)</option>
+                    <option value="flash_deals">⏰ Ofertas Relâmpago</option>
+                    <option value="electronics">💻 Eletrónicos & Tecnologia</option>
+                    <option value="fashion">👗 Moda & Acessórios</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Palavras-Chave Personalizadas (Opcional)</label>
+                <input type="text" id="customKeywords" placeholder="Ex: promoção, frete grátis, smartphone">
             </div>
 
             <button class="btn" onclick="salvarConfiguracoes()"><i class="ph ph-floppy-disk"></i> Salvar Configurações</button>
