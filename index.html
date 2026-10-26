@@ -3,9 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Robô de Afiliados Pro - Automação Inteligente</title>
+    <title>Robô de Afiliados Pro - Painel Firebase</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- SDKs do Firebase (Auth e Firestore) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // Configuração oficial do teu projeto Firebase
+        const firebaseConfig = {
+          apiKey: "AIzaSyB4N7gvqdgIQMxM7Ft5jYMYfno1nox13cw",
+          authDomain: "robo-afiliados-pro.firebaseapp.com",
+          projectId: "robo-afiliados-pro",
+          storageBucket: "robo-afiliados-pro.firebasestorage.app",
+          messagingSenderId: "486833496863",
+          appId: "1:486833496863:web:ec3001a92ae2c4d934c62a",
+          measurementId: "G-5QS5WLX996"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Expor funções globalmente para o HTML utilizar
+        window.firebaseAuth = auth;
+        window.firebaseDb = db;
+        window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+        window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+        window.signOut = signOut;
+        window.doc = doc;
+        window.setDoc = setDoc;
+        window.getDoc = getDoc;
+
+        // Observar estado de autenticação (Mantém o utilizador logado)
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                document.getElementById('userGreeting').innerText = "Painel: " + user.email;
+                trocarTela('dashboard');
+                await carregarConfiguracoes(user.uid);
+            } else {
+                trocarTela('landing');
+            }
+        });
+    </script>
+
     <style>
         :root {
             --bg-main: #0f172a;
@@ -47,7 +91,6 @@
             font-weight: 700;
         }
 
-        /* Grid para os Dias da Semana */
         .days-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -68,11 +111,7 @@
         }
         .day-item input { width: auto; cursor: pointer; }
 
-        .row-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
+        .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
         .btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; text-decoration: none; text-align: center; }
         .btn:hover { background: var(--primary-hover); }
@@ -83,7 +122,6 @@
 
         .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; text-align: center; margin-bottom: 16px; }
         .badge.active { background: rgba(16, 185, 129, 0.2); color: var(--primary); border: 1px solid var(--primary); }
-        .badge.blocked { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger); }
 
         .landing-features { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; margin-bottom: 16px; font-size: 13px; color: var(--text-muted); line-height: 1.6; }
         .landing-features h3 { color: var(--primary); font-size: 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
@@ -96,19 +134,13 @@
         .link-switch { text-align: center; margin-top: 16px; font-size: 13px; color: var(--text-muted); }
         .link-switch a { color: var(--primary); text-decoration: none; font-weight: 600; cursor: pointer; }
         .link-switch a:hover { text-decoration: underline; }
-
-        .plans-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-        .plan-card { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; }
-        .plan-card.selected { border-color: var(--primary); background: rgba(16, 185, 129, 0.1); }
-        .plan-card h4 { font-size: 13px; margin-bottom: 2px; }
-        .plan-card span { font-size: 11px; color: var(--text-muted); }
     </style>
 </head>
 <body>
 
 <div class="container">
 
-    <!-- TELA 1: APRESENTAÇÃO / LANDING PAGE INICIAL -->
+    <!-- TELA 1: LANDING PAGE -->
     <div id="landingScreen">
         <div class="logo-area">
             <i class="ph ph-robot"></i>
@@ -119,20 +151,20 @@
         <div class="landing-features">
             <h3><i class="ph ph-sparkle"></i> Como Funciona?</h3>
             <ul>
-                <li>Dispara ofertas da Shopee e Mercado Livre automaticamente no seu canal do Telegram.</li>
-                <li>Limpa mensagens antigas automaticamente para manter seu canal organizado.</li>
-                <li><b>Teste Grátis de 7 Dias:</b> Cadastre-se agora e teste todas as funções sem compromisso!</li>
+                <li>Dispara ofertas da Shopee automaticamente no seu canal do Telegram.</li>
+                <li>Limpa mensagens antigas para manter seu canal organizado.</li>
+                <li><b>Painel na Nuvem:</b> Gerencie tudo de forma segura e automatizada.</li>
             </ul>
         </div>
 
-        <a href="https://wa.me/5519997648211?text=Olá%20Cristian,%20vim%20pelo%20site%20e%20quero%20saber%20mais%20sobre%20o%20Robô%20de%20Afiliados!" target="_blank" class="btn btn-whatsapp">
-            <i class="ph ph-whatsapp-logo"></i> Falar com o Suporte no WhatsApp
+        <a href="https://wa.me/5519997648211?text=Olá%20Cristian,%20quero%20saber%20mais%20sobre%20o%20Robô%20de%20Afiliados!" target="_blank" class="btn btn-whatsapp">
+            <i class="ph ph-whatsapp-logo"></i> Falar com o Suporte
         </a>
 
-        <button class="btn" onclick="trocarTela('register')" style="margin-top: 10px;"><i class="ph ph-user-plus"></i> Criar Conta Grátis (7 Dias)</button>
+        <button class="btn" onclick="trocarTela('register')" style="margin-top: 10px;"><i class="ph ph-user-plus"></i> Criar Conta</button>
         
         <div class="link-switch">
-            Já tem uma conta? <a onclick="trocarTela('auth')">Fazer Login no Painel</a>
+            Já tem uma conta? <a onclick="trocarTela('auth')">Fazer Login</a>
         </div>
     </div>
 
@@ -141,11 +173,11 @@
         <div class="logo-area">
             <i class="ph ph-sign-in"></i>
             <h1>Entrar no Painel</h1>
-            <p>Gerencie seu robô de automação</p>
+            <p>Acesse sua conta do robô</p>
         </div>
 
         <div class="form-group">
-            <label>E-mail de Acesso</label>
+            <label>E-mail</label>
             <input type="email" id="loginEmail" placeholder="seu@email.com">
         </div>
         <div class="form-group">
@@ -153,10 +185,10 @@
             <input type="password" id="loginPass" placeholder="••••••••">
         </div>
 
-        <button class="btn" onclick="fazerLogin()"><i class="ph ph-sign-in"></i> Entrar</button>
+        <button class="btn" onclick="fazerLoginReal()"><i class="ph ph-sign-in"></i> Entrar</button>
         
         <div class="link-switch">
-            <a onclick="trocarTela('landing')">← Voltar para o Início</a> | <a onclick="trocarTela('register')">Criar conta</a>
+            <a onclick="trocarTela('landing')">← Voltar</a> | <a onclick="trocarTela('register')">Criar conta</a>
         </div>
     </div>
 
@@ -164,67 +196,36 @@
     <div id="registerScreen" class="hidden">
         <div class="logo-area">
             <i class="ph ph-user-plus"></i>
-            <h1>Criar Conta Grátis</h1>
-            <p>Ganhe 7 dias de acesso completo imediato</p>
+            <h1>Criar Conta</h1>
+            <p>Tenha acesso imediato ao painel</p>
         </div>
 
-        <div class="form-group">
-            <label>Seu Nome</label>
-            <input type="text" id="regName" placeholder="Seu Nome">
-        </div>
         <div class="form-group">
             <label>E-mail</label>
             <input type="email" id="regEmail" placeholder="seu@email.com">
         </div>
         <div class="form-group">
-            <label>WhatsApp (com DDD)</label>
-            <input type="text" id="regWhatsapp" placeholder="11999999999">
-        </div>
-        <div class="form-group">
-            <label>Senha</label>
+            <label>Senha (mínimo 6 caracteres)</label>
             <input type="password" id="regPass" placeholder="••••••••">
         </div>
 
-        <button class="btn" onclick="fazerCadastro()"><i class="ph ph-check-circle"></i> Cadastrar e Iniciar Teste</button>
+        <button class="btn" onclick="fazerCadastroReal()"><i class="ph ph-check-circle"></i> Cadastrar Conta</button>
         
         <div class="link-switch">
-            <a onclick="trocarTela('landing')">← Voltar para o Início</a> | <a onclick="trocarTela('auth')">Fazer Login</a>
+            <a onclick="trocarTela('landing')">← Voltar</a> | <a onclick="trocarTela('auth')">Fazer Login</a>
         </div>
     </div>
 
-    <!-- TELA 4: PAINEL DO CLIENTE (DASHBOARD) -->
+    <!-- TELA 4: DASHBOARD -->
     <div id="dashboardScreen" class="hidden">
         <div class="logo-area" style="margin-bottom: 10px;">
             <i class="ph ph-sliders-horizontal" style="font-size: 28px;"></i>
             <h1 id="userGreeting">Painel do Cliente</h1>
-            <div id="licenseBadge" class="badge active">Licença Ativa (Teste Grátis - 7 Dias)</div>
+            <div id="licenseBadge" class="badge active">Licença Ativa (Firebase Cloud)</div>
         </div>
 
-        <!-- Alerta de bloqueio caso expire -->
-        <div id="blockedWarning" class="hidden" style="background: rgba(239,68,68,0.1); border: 1px solid var(--danger); padding: 12px; border-radius: 8px; margin-bottom: 14px; text-align: center;">
-            <p style="font-size: 13px; color: var(--danger); font-weight: 600; margin-bottom: 6px;">⚠️ Seu período de testes expirou!</p>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">Escolha um plano e confirme a ativação pelo WhatsApp.</p>
-            
-            <div class="plans-grid">
-                <div class="plan-card selected" onclick="selecionarPlano('mensal')">
-                    <h4>Mensal</h4>
-                    <span>R$ 49 /mês</span>
-                </div>
-                <div class="plan-card" onclick="selecionarPlano('anual')">
-                    <h4>Anual</h4>
-                    <span>R$ 397 /ano</span>
-                </div>
-            </div>
-
-            <a id="whatsappPayLink" href="https://wa.me/5519997648211?text=Olá%20Cristian,%20quero%20ativar%20minha%20conta%20no%20Robô%20de%20Afiliados!" target="_blank" class="btn btn-whatsapp">
-                <i class="ph ph-whatsapp-logo"></i> Ativar pelo WhatsApp
-            </a>
-        </div>
-
-        <!-- Configurações do Robô -->
         <div id="configSection">
-            
-            <div class="section-divider">🔑 Conexão Telegram & Afiliado</div>
+            <div class="section-divider">🔑 Conexão Telegram & Shopee</div>
 
             <div class="form-group">
                 <label><i class="ph ph-telegram-logo" style="color: #38bdf8;"></i> Token do Bot do Telegram</label>
@@ -237,93 +238,53 @@
             </div>
 
             <div class="form-group">
-                <label><i class="ph ph-link"></i> Seu Link de Afiliado Base</label>
-                <input type="text" id="affLink" placeholder="https://shope.ee/seu_link">
-            </div>
-
-            <div class="section-divider">📅 Dias de Funcionamento</div>
-            <label>Selecione os dias da semana em que o robô trabalha:</label>
-            <div class="days-grid">
-                <label class="day-item"><input type="checkbox" id="d_seg" checked> Seg</label>
-                <label class="day-item"><input type="checkbox" id="d_ter" checked> Ter</label>
-                <label class="day-item"><input type="checkbox" id="d_qua" checked> Qua</label>
-                <label class="day-item"><input type="checkbox" id="d_qui" checked> Qui</label>
-                <label class="day-item"><input type="checkbox" id="d_sex" checked> Sex</label>
-                <label class="day-item"><input type="checkbox" id="d_sab" checked> Sáb</label>
-                <label class="day-item"><input type="checkbox" id="d_dom" checked> Dom</label>
+                <label><i class="ph ph-link"></i> Seu Link de Afiliado Shopee</label>
+                <input type="text" id="affLink" placeholder="https://s.shopee.com.br/...">
             </div>
 
             <div class="section-divider">📦 Volume de Postagens</div>
             <div class="row-2">
                 <div class="form-group">
-                    <label>Quantidade de Produtos</label>
+                    <label>Quantidade</label>
                     <input type="number" id="postQuantity" value="10" min="1" max="500">
                 </div>
                 <div class="form-group">
-                    <label>Frequência (Período)</label>
+                    <label>Frequência</label>
                     <select id="postPeriod">
                         <option value="day">Por Dia</option>
                         <option value="week">Por Semana</option>
-                        <option value="month">Por Mês</option>
                     </select>
                 </div>
             </div>
 
             <div class="section-divider">🧹 Limpeza Automática do Canal</div>
             <div class="form-group">
-                <label>Apagar mensagens antigas do canal a cada:</label>
+                <label>Apagar mensagens antigas a cada:</label>
                 <select id="autoCleanInterval">
-                    <option value="1">A cada 1 Dia (Manter só o dia)</option>
                     <option value="7" selected>A cada 7 Dias (Semanal)</option>
                     <option value="15">A cada 15 Dias</option>
                     <option value="30">A cada 30 Dias (Mensal)</option>
-                    <option value="60">A cada 2 Meses</option>
-                    <option value="90">A cada 3 Meses</option>
-                    <option value="never">Desativar Limpeza Automática</option>
+                    <option value="never">Desativar</option>
                 </select>
             </div>
 
-            <div class="section-divider">💬 Legenda & Legado das Ofertas</div>
-            <div class="form-group">
-                <label>Aviso de Validade na Mensagem</label>
-                <input type="text" id="offerValidityText" value="⚡ Oferta Limitada - Válida por Tempo Limitado!" placeholder="Ex: Oferta válida para esta semana!">
-            </div>
-
-            <div class="section-divider">🎯 Filtro de Ofertas e Categorias</div>
-            <div class="form-group">
-                <label>Categoria de Preferência</label>
-                <select id="offerCategory">
-                    <option value="all">🔥 Todas as Ofertas (Geral)</option>
-                    <option value="super_discounts">⚡ Apenas Descontos Altos (50%+)</option>
-                    <option value="flash_deals">⏰ Ofertas Relâmpago</option>
-                    <option value="electronics">💻 Eletrónicos & Tecnologia</option>
-                    <option value="fashion">👗 Moda & Acessórios</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>Palavras-Chave Personalizadas (Opcional)</label>
-                <input type="text" id="customKeywords" placeholder="Ex: promoção, frete grátis, smartphone">
-            </div>
-
-            <button class="btn" onclick="salvarConfiguracoes()"><i class="ph ph-floppy-disk"></i> Salvar Configurações</button>
-            <button class="btn btn-secondary" onclick="abrirTutorial()" style="margin-top: 8px;"><i class="ph ph-book-open"></i> Ver Passo a Passo (Como Criar Canal e Bot)</button>
+            <button class="btn" onclick="salvarConfiguracoesNoFirebase()"><i class="ph ph-floppy-disk"></i> Salvar na Nuvem</button>
+            <button class="btn btn-secondary" onclick="abrirTutorial()" style="margin-top: 8px;"><i class="ph ph-book-open"></i> Ver Tutorial</button>
         </div>
 
-        <!-- Tutorial Integrado -->
+        <!-- Tutorial -->
         <div id="tutorialBox" class="hidden tutorial-box">
-            <h3><i class="ph ph-info"></i> Passo a Passo para Configurar:</h3>
+            <h3><i class="ph ph-info"></i> Passo a Passo:</h3>
             <ol>
-                <li>Abra o Telegram e busque por <b>@BotFather</b>.</li>
-                <li>Envie <code>/newbot</code>, dê um nome e um username terminando em <code>_bot</code>.</li>
-                <li>Copie o <b>Token</b> gerado e cole no campo acima.</li>
-                <li>Crie um Canal Público no Telegram, adicione seu bot como <b>Administrador</b> e pegue o ID (ex: <code>@seu_canal</code>).</li>
+                <li>Crie seu bot no <b>@BotFather</b> e copie o Token.</li>
+                <li>Crie um Canal Público, adicione o bot como <b>Administrador</b>.</li>
+                <li>Cole as informações acima e clique em "Salvar na Nuvem".</li>
             </ol>
-            <button class="btn btn-secondary" onclick="fecharTutorial()" style="margin-top: 8px; padding: 8px;">Ocultar Tutorial</button>
+            <button class="btn btn-secondary" onclick="fecharTutorial()" style="margin-top: 8px; padding: 8px;">Ocultar</button>
         </div>
 
         <div class="link-switch" style="margin-top: 16px;">
-            <a onclick="trocarTela('landing')" style="color: var(--danger);">Sair da Conta</a>
+            <a onclick="fazerLogoutReal()" style="color: var(--danger);">Sair da Conta</a>
         </div>
     </div>
 
@@ -342,54 +303,74 @@
         if(tela === 'dashboard') document.getElementById('dashboardScreen').classList.remove('hidden');
     }
 
-    function fazerLogin() {
+    async function fazerLoginReal() {
         const email = document.getElementById('loginEmail').value;
-        if(!email) { alert('Informe seu e-mail.'); return; }
-        document.getElementById('userGreeting').innerText = "Painel: " + email.split('@')[0];
-        trocarTela('dashboard');
+        const pass = document.getElementById('loginPass').value;
+        try {
+            await window.signInWithEmailAndPassword(window.firebaseAuth, email, pass);
+            alert('✅ Login efetuado com sucesso!');
+        } catch (error) {
+            alert('❌ Erro ao entrar: ' + error.message);
+        }
     }
 
-    function fazerCadastro() {
-        const name = document.getElementById('regName').value;
+    async function fazerCadastroReal() {
         const email = document.getElementById('regEmail').value;
-        if(!name || !email) { alert('Preencha os campos!'); return; }
-        alert('Conta criada com sucesso! 7 dias de teste liberados.');
-        trocarTela('dashboard');
+        const pass = document.getElementById('regPass').value;
+        try {
+            await window.createUserWithEmailAndPassword(window.firebaseAuth, email, pass);
+            alert('✅ Conta criada com sucesso!');
+        } catch (error) {
+            alert('❌ Erro ao cadastrar: ' + error.message);
+        }
     }
 
-    function salvarConfiguracoes() {
+    async function fazerLogoutReal() {
+        await window.signOut(window.firebaseAuth);
+    }
+
+    async function salvarConfiguracoesNoFirebase() {
+        const user = window.firebaseAuth.currentUser;
+        if (!user) { alert('Sessão expirada.'); return; }
+
         const dadosConfig = {
             botToken: document.getElementById('botToken').value,
             channelId: document.getElementById('channelId').value,
             affLink: document.getElementById('affLink').value,
             postQuantity: document.getElementById('postQuantity').value,
             postPeriod: document.getElementById('postPeriod').value,
-            autoCleanInterval: document.getElementById('autoCleanInterval').value,
-            offerValidityText: document.getElementById('offerValidityText').value,
-            offerCategory: document.getElementById('offerCategory').value,
-            customKeywords: document.getElementById('customKeywords').value
+            autoCleanInterval: document.getElementById('autoCleanInterval').value
         };
 
         if(!dadosConfig.botToken || !dadosConfig.channelId) {
-            alert('⚠️ Por favor, preencha pelo menos o Token do Bot e o ID do Canal.');
+            alert('⚠️ Preencha o Token do Bot e o ID do Canal.');
             return;
         }
 
         try {
-            localStorage.setItem('robo_config', JSON.stringify(dadosConfig));
-            alert('✅ Configurações salvas e aplicadas com sucesso ao robô!');
+            await window.setDoc(window.doc(window.firebaseDb, "configuracoes_bots", user.uid), dadosConfig);
+            alert('✅ Configurações salvas com segurança no Firebase!');
         } catch (error) {
-            console.error('Erro ao salvar:', error);
-            alert('❌ Erro ao comunicar com o armazenamento.');
+            console.error(error);
+            alert('❌ Erro ao salvar na nuvem.');
         }
     }
 
-    function selecionarPlano(plano) {
-        const cards = document.querySelectorAll('.plan-card');
-        cards.forEach(c => c.classList.remove('selected'));
-        event.currentTarget.classList.add('selected');
-        let textoWpp = plano === 'mensal' ? "Olá Cristian, quero ativar meu plano mensal!" : "Olá Cristian, quero ativar meu plano anual com desconto!";
-        document.getElementById('whatsappPayLink').href = `https://wa.me/5519997648211?text=${encodeURIComponent(textoWpp)}`;
+    async function carregarConfiguracoes(uid) {
+        try {
+            const docSnap = await window.getDoc(window.doc(window.firebaseDb, "configuracoes_bots", uid));
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('botToken').value = data.botToken || '';
+                document.getElementById('channelId').value = data.channelId || '';
+                document.getElementById('affLink').value = data.affLink || '';
+                document.getElementById('postQuantity').value = data.postQuantity || '10';
+                document.getElementById('postPeriod').value = data.postPeriod || 'day';
+                document.getElementById('autoCleanInterval').value = data.autoCleanInterval || '7';
+            }
+        } catch (error) {
+            console.error("Erro ao carregar dados do Firebase:", error);
+        }
     }
 
     function abrirTutorial() { document.getElementById('tutorialBox').classList.remove('hidden'); }
