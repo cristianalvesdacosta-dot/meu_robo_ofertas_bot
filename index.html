@@ -1,3 +1,334 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robô de Afiliados Pro - Automação Inteligente</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --bg-input: #090d16;
+            --border-color: #334155;
+            --primary: #10b981;
+            --primary-hover: #059669;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --danger: #ef4444;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; padding: 20px; display: flex; justify-content: center; align-items: center; }
+        
+        .container { width: 100%; max-width: 520px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
+        
+        .logo-area { text-align: center; margin-bottom: 20px; }
+        .logo-area i { font-size: 48px; color: var(--primary); margin-bottom: 8px; }
+        .logo-area h1 { font-size: 22px; font-weight: 700; color: var(--text-main); }
+        .logo-area p { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+
+        .hidden { display: none !important; }
+
+        .form-group { margin-bottom: 14px; }
+        label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+        input, select { width: 100%; padding: 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); font-size: 14px; outline: none; transition: border 0.2s; }
+        input:focus, select:focus { border-color: var(--primary); }
+
+        .section-divider {
+            font-size: 11px;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin: 20px 0 10px 0;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 4px;
+            font-weight: 700;
+        }
+
+        /* Grid para os Dias da Semana */
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+        .day-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            background: var(--bg-input);
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            color: var(--text-main);
+        }
+        .day-item input { width: auto; cursor: pointer; }
+
+        .row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; text-decoration: none; text-align: center; }
+        .btn:hover { background: var(--primary-hover); }
+        .btn-whatsapp { background: #25d366; }
+        .btn-whatsapp:hover { background: #1ebe5d; }
+        .btn-secondary { background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); }
+        .btn-secondary:hover { background: var(--border-color); color: var(--text-main); }
+
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; text-align: center; margin-bottom: 16px; }
+        .badge.active { background: rgba(16, 185, 129, 0.2); color: var(--primary); border: 1px solid var(--primary); }
+        .badge.blocked { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+
+        .landing-features { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; margin-bottom: 16px; font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+        .landing-features h3 { color: var(--primary); font-size: 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .landing-features ul { padding-left: 18px; }
+
+        .tutorial-box { background: var(--bg-input); border: 1px dashed var(--border-color); padding: 14px; border-radius: 8px; margin-top: 14px; }
+        .tutorial-box h3 { font-size: 14px; color: var(--primary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .tutorial-box ol { padding-left: 18px; font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+        .link-switch { text-align: center; margin-top: 16px; font-size: 13px; color: var(--text-muted); }
+        .link-switch a { color: var(--primary); text-decoration: none; font-weight: 600; cursor: pointer; }
+        .link-switch a:hover { text-decoration: underline; }
+
+        .plans-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+        .plan-card { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; }
+        .plan-card.selected { border-color: var(--primary); background: rgba(16, 185, 129, 0.1); }
+        .plan-card h4 { font-size: 13px; margin-bottom: 2px; }
+        .plan-card span { font-size: 11px; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- TELA 1: APRESENTAÇÃO / LANDING PAGE INICIAL -->
+    <div id="landingScreen">
+        <div class="logo-area">
+            <i class="ph ph-robot"></i>
+            <h1>Robô de Afiliados Pro</h1>
+            <p>Seu sistema inteligente de postagens automáticas</p>
+        </div>
+
+        <div class="landing-features">
+            <h3><i class="ph ph-sparkle"></i> Como Funciona?</h3>
+            <ul>
+                <li>Dispara ofertas da Shopee e Mercado Livre automaticamente no seu canal do Telegram.</li>
+                <li>Limpa mensagens antigas automaticamente para manter seu canal organizado.</li>
+                <li><b>Teste Grátis de 7 Dias:</b> Cadastre-se agora e teste todas as funções sem compromisso!</li>
+            </ul>
+        </div>
+
+        <a href="https://wa.me/5519997648211?text=Olá%20Cristian,%20vim%20pelo%20site%20e%20quero%20saber%20mais%20sobre%20o%20Robô%20de%20Afiliados!" target="_blank" class="btn btn-whatsapp">
+            <i class="ph ph-whatsapp-logo"></i> Falar com o Suporte no WhatsApp
+        </a>
+
+        <button class="btn" onclick="trocarTela('register')" style="margin-top: 10px;"><i class="ph ph-user-plus"></i> Criar Conta Grátis (7 Dias)</button>
+        
+        <div class="link-switch">
+            Já tem uma conta? <a onclick="trocarTela('auth')">Fazer Login no Painel</a>
+        </div>
+    </div>
+
+    <!-- TELA 2: LOGIN -->
+    <div id="authScreen" class="hidden">
+        <div class="logo-area">
+            <i class="ph ph-sign-in"></i>
+            <h1>Entrar no Painel</h1>
+            <p>Gerencie seu robô de automação</p>
+        </div>
+
+        <div class="form-group">
+            <label>E-mail de Acesso</label>
+            <input type="email" id="loginEmail" placeholder="seu@email.com">
+        </div>
+        <div class="form-group">
+            <label>Senha</label>
+            <input type="password" id="loginPass" placeholder="••••••••">
+        </div>
+
+        <button class="btn" onclick="fazerLogin()"><i class="ph ph-sign-in"></i> Entrar</button>
+        
+        <div class="link-switch">
+            <a onclick="trocarTela('landing')">← Voltar para o Início</a> | <a onclick="trocarTela('register')">Criar conta</a>
+        </div>
+    </div>
+
+    <!-- TELA 3: CADASTRO -->
+    <div id="registerScreen" class="hidden">
+        <div class="logo-area">
+            <i class="ph ph-user-plus"></i>
+            <h1>Criar Conta Grátis</h1>
+            <p>Ganhe 7 dias de acesso completo imediato</p>
+        </div>
+
+        <div class="form-group">
+            <label>Seu Nome</label>
+            <input type="text" id="regName" placeholder="Seu Nome">
+        </div>
+        <div class="form-group">
+            <label>E-mail</label>
+            <input type="email" id="regEmail" placeholder="seu@email.com">
+        </div>
+        <div class="form-group">
+            <label>WhatsApp (com DDD)</label>
+            <input type="text" id="regWhatsapp" placeholder="11999999999">
+        </div>
+        <div class="form-group">
+            <label>Senha</label>
+            <input type="password" id="regPass" placeholder="••••••••">
+        </div>
+
+        <button class="btn" onclick="fazerCadastro()"><i class="ph ph-check-circle"></i> Cadastrar e Iniciar Teste</button>
+        
+        <div class="link-switch">
+            <a onclick="trocarTela('landing')">← Voltar para o Início</a> | <a onclick="trocarTela('auth')">Fazer Login</a>
+        </div>
+    </div>
+
+    <!-- TELA 4: PAINEL DO CLIENTE (DASHBOARD) -->
+    <div id="dashboardScreen" class="hidden">
+        <div class="logo-area" style="margin-bottom: 10px;">
+            <i class="ph ph-sliders-horizontal" style="font-size: 28px;"></i>
+            <h1 id="userGreeting">Painel do Cliente</h1>
+            <div id="licenseBadge" class="badge active">Licença Ativa (Teste Grátis - 7 Dias)</div>
+        </div>
+
+        <!-- Alerta de bloqueio caso expire -->
+        <div id="blockedWarning" class="hidden" style="background: rgba(239,68,68,0.1); border: 1px solid var(--danger); padding: 12px; border-radius: 8px; margin-bottom: 14px; text-align: center;">
+            <p style="font-size: 13px; color: var(--danger); font-weight: 600; margin-bottom: 6px;">⚠️ Seu período de testes expirou!</p>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">Escolha um plano e confirme a ativação pelo WhatsApp.</p>
+            
+            <div class="plans-grid">
+                <div class="plan-card selected" onclick="selecionarPlano('mensal')">
+                    <h4>Mensal</h4>
+                    <span>R$ 49 /mês</span>
+                </div>
+                <div class="plan-card" onclick="selecionarPlano('anual')">
+                    <h4>Anual</h4>
+                    <span>R$ 397 /ano</span>
+                </div>
+            </div>
+
+            <a id="whatsappPayLink" href="https://wa.me/5519997648211?text=Olá%20Cristian,%20quero%20ativar%20minha%20conta%20no%20Robô%20de%20Afiliados!" target="_blank" class="btn btn-whatsapp">
+                <i class="ph ph-whatsapp-logo"></i> Ativar pelo WhatsApp
+            </a>
+        </div>
+
+        <!-- Configurações do Robô -->
+        <div id="configSection">
+            
+            <div class="section-divider">🔑 Conexão Telegram & Afiliado</div>
+
+            <div class="form-group">
+                <label><i class="ph ph-telegram-logo" style="color: #38bdf8;"></i> Token do Bot do Telegram</label>
+                <input type="text" id="botToken" placeholder="Ex: 8616829338:AAHHLfo...">
+            </div>
+
+            <div class="form-group">
+                <label><i class="ph ph-chat-centered-text"></i> ID do Canal (ex: @seu_canal)</label>
+                <input type="text" id="channelId" placeholder="@meu_canal_ofertas">
+            </div>
+
+            <div class="form-group">
+                <label><i class="ph ph-link"></i> Seu Link de Afiliado Base</label>
+                <input type="text" id="affLink" placeholder="https://shope.ee/seu_link">
+            </div>
+
+            <div class="section-divider">📅 Dias de Funcionamento</div>
+            <label>Selecione os dias da semana em que o robô trabalha:</label>
+            <div class="days-grid">
+                <label class="day-item"><input type="checkbox" id="d_seg" checked> Seg</label>
+                <label class="day-item"><input type="checkbox" id="d_ter" checked> Ter</label>
+                <label class="day-item"><input type="checkbox" id="d_qua" checked> Qua</label>
+                <label class="day-item"><input type="checkbox" id="d_qui" checked> Qui</label>
+                <label class="day-item"><input type="checkbox" id="d_sex" checked> Sex</label>
+                <label class="day-item"><input type="checkbox" id="d_sab" checked> Sáb</label>
+                <label class="day-item"><input type="checkbox" id="d_dom" checked> Dom</label>
+            </div>
+
+            <div class="section-divider">📦 Volume de Postagens</div>
+            <div class="row-2">
+                <div class="form-group">
+                    <label>Quantidade de Produtos</label>
+                    <input type="number" id="postQuantity" value="10" min="1" max="500">
+                </div>
+                <div class="form-group">
+                    <label>Frequência (Período)</label>
+                    <select id="postPeriod">
+                        <option value="day">Por Dia</option>
+                        <option value="week">Por Semana</option>
+                        <option value="month">Por Mês</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="section-divider">🧹 Limpeza Automática do Canal</div>
+            <div class="form-group">
+                <label>Apagar mensagens antigas do canal a cada:</label>
+                <select id="autoCleanInterval">
+                    <option value="1">A cada 1 Dia (Manter só o dia)</option>
+                    <option value="7" selected>A cada 7 Dias (Semanal)</option>
+                    <option value="15">A cada 15 Dias</option>
+                    <option value="30">A cada 30 Dias (Mensal)</option>
+                    <option value="60">A cada 2 Meses</option>
+                    <option value="90">A cada 3 Meses</option>
+                    <option value="never">Desativar Limpeza Automática</option>
+                </select>
+            </div>
+
+            <div class="section-divider">💬 Legenda & Legado das Ofertas</div>
+            <div class="form-group">
+                <label>Aviso de Validade na Mensagem</label>
+                <input type="text" id="offerValidityText" value="⚡ Oferta Limitada - Válida por Tempo Limitado!" placeholder="Ex: Oferta válida para esta semana!">
+            </div>
+
+            <div class="section-divider">🎯 Filtro de Ofertas e Categorias</div>
+            <div class="form-group">
+                <label>Categoria de Preferência</label>
+                <select id="offerCategory">
+                    <option value="all">🔥 Todas as Ofertas (Geral)</option>
+                    <option value="super_discounts">⚡ Apenas Descontos Altos (50%+)</option>
+                    <option value="flash_deals">⏰ Ofertas Relâmpago</option>
+                    <option value="electronics">💻 Eletrónicos & Tecnologia</option>
+                    <option value="fashion">👗 Moda & Acessórios</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Palavras-Chave Personalizadas (Opcional)</label>
+                <input type="text" id="customKeywords" placeholder="Ex: promoção, frete grátis, smartphone">
+            </div>
+
+            <button class="btn" onclick="salvarConfiguracoes()"><i class="ph ph-floppy-disk"></i> Salvar Configurações</button>
+            <button class="btn btn-secondary" onclick="abrirTutorial()" style="margin-top: 8px;"><i class="ph ph-book-open"></i> Ver Passo a Passo (Como Criar Canal e Bot)</button>
+        </div>
+
+        <!-- Tutorial Integrado -->
+        <div id="tutorialBox" class="hidden tutorial-box">
+            <h3><i class="ph ph-info"></i> Passo a Passo para Configurar:</h3>
+            <ol>
+                <li>Abra o Telegram e busque por <b>@BotFather</b>.</li>
+                <li>Envie <code>/newbot</code>, dê um nome e um username terminando em <code>_bot</code>.</li>
+                <li>Copie o <b>Token</b> gerado e cole no campo acima.</li>
+                <li>Crie um Canal Público no Telegram, adicione seu bot como <b>Administrador</b> e pegue o ID (ex: <code>@seu_canal</code>).</li>
+            </ol>
+            <button class="btn btn-secondary" onclick="fecharTutorial()" style="margin-top: 8px; padding: 8px;">Ocultar Tutorial</button>
+        </div>
+
+        <div class="link-switch" style="margin-top: 16px;">
+            <a onclick="trocarTela('landing')" style="color: var(--danger);">Sair da Conta</a>
+        </div>
+    </div>
+
+</div>
+
 <script>
     function trocarTela(tela) {
         document.getElementById('landingScreen').classList.add('hidden');
@@ -26,8 +357,7 @@
         trocarTela('dashboard');
     }
 
-    // Função que agora recolhe tudo do painel e envia para o bot.py no Render
-    async function salvarConfiguracoes() {
+    function salvarConfiguracoes() {
         const dadosConfig = {
             botToken: document.getElementById('botToken').value,
             channelId: document.getElementById('channelId').value,
@@ -46,17 +376,11 @@
         }
 
         try {
-            // Se o teu site estiver no GitHub Pages e o bot no Render, 
-            // podes enviar os dados diretamente para a URL do teu serviço no Render:
-            // Exemplo: const renderUrl = 'https://teu-robo.onrender.com/update_config';
-            
-            // Por enquanto, salvamos localmente e damos o feedback de sucesso:
             localStorage.setItem('robo_config', JSON.stringify(dadosConfig));
-            
             alert('✅ Configurações salvas e aplicadas com sucesso ao robô!');
         } catch (error) {
             console.error('Erro ao salvar:', error);
-            alert('❌ Erro ao comunicar com o servidor.');
+            alert('❌ Erro ao comunicar com o armazenamento.');
         }
     }
 
@@ -71,3 +395,6 @@
     function abrirTutorial() { document.getElementById('tutorialBox').classList.remove('hidden'); }
     function fecharTutorial() { document.getElementById('tutorialBox').classList.add('hidden'); }
 </script>
+
+</body>
+</html>
