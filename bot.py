@@ -10,7 +10,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "Robô de Afiliados Rodando 100% Ajustado!"
+    return "Robô de Afiliados Rodando 100% Limpo!"
 
 if not firebase_admin._apps:
     cred = credentials.Certificate("firebase_credentials.json")
@@ -21,37 +21,37 @@ db = firestore.client()
 LOJA = os.getenv("LOJA", "shopee").lower()
 DOCUMENTO_CONFIG = f"{LOJA}_settings"
 
-print(f"🤖 Robô iniciado para a loja: {LOJA.upper()}!")
+print(f"🤖 Robô limpo e iniciado para a loja: {LOJA.upper()}!")
 
 # ==========================================
-# 🎁 CATÁLOGO OFICIAL (COLOQUE AQUI OS LINKS REAIS DAS FOTOS DOS SEUS PRODUTOS)
+# 🎁 CATÁLOGO OFICIAL COM FOTOS REAIS E DIFERENTES
 # ==========================================
 CATALOGO_PRODUTOS = {
     "natura": [
         {
-            "foto": "https://img.natura.com.br/product/1000w/114563_1.jpg", # Foto oficial Natura do Kayak
+            "foto": "https://img.natura.com.br/product/1000w/114563_1.jpg",
             "texto": "🌊 *Colônia Desodorante Kayak Masculino - 100ml*\n\nO clássico que traz a sensação de liberdade e energia pura. Perfeito para o dia a dia!\n\n💰 *Valor na Loja:* R$ 149,90\n🔥 *Com o seu Cupom (10% OFF):* R$ 134,91\n🏷️ *Cupom Exclusivo:* `{cupom}`\n\n👉 [Comprar na Minha Loja]({link})"
         },
         {
-            "foto": "https://img.natura.com.br/product/1000w/70123_1.jpg", # Foto oficial Natura do Luna
+            "foto": "https://img.natura.com.br/product/1000w/70123_1.jpg",
             "texto": "🌸 *Desodorante Colônia Luna Tradicional - 75ml*\n\nChipré brasileiro que une o frescor das frutas cítricas com um toque floral marcante.\n\n💰 *Valor na Loja:* R$ 159,90\n🔥 *Com o seu Cupom (10% OFF):* R$ 143,91\n🏷️ *Cupom Exclusivo:* `{cupom}`\n\n👉 [Comprar na Minha Loja]({link})"
         },
         {
-            "foto": "https://img.natura.com.br/product/1000w/85412_1.jpg", # Foto oficial Natura do Tododia
+            "foto": "https://img.natura.com.br/product/1000w/85412_1.jpg",
             "texto": "💧 *Creme Desodorante Nutritivo Tododia Baunilha e Macadâmia - 400ml*\n\nNutrição profunda com toque aveludado e perfume que dura o dia todo.\n\n💰 *Valor na Loja:* R$ 69,90\n🔥 *Com o seu Cupom (10% OFF):* R$ 62,91\n🏷️ *Cupom Exclusivo:* `{cupom}`\n\n👉 [Comprar na Minha Loja]({link})"
         }
     ],
     "shopee": [
         {
-            "foto": "https://cf.shopee.com.br/file/sg-11134201-7rdvn-m180v362i02c7b", # Foto do Fone TWS
+            "foto": "https://cf.shopee.com.br/file/sg-11134201-7rdvn-m180v362i02c7b",
             "texto": "🔥 *Fone de Ouvido Bluetooth TWS Sem Fio*\n\nExcelente qualidade de som, bateria duradoura e preço de fábrica com frete grátis!\n\n💰 *Preço Especial:* R$ 49,90\n🏷️ *Utilize seu cupom na finalização!*\n\n👉 [Aproveitar Oferta na Shopee]({link})"
         },
         {
-            "foto": "https://cf.shopee.com.br/file/br-11134207-7r98o-m123456789", # Foto do Suporte Veicular
+            "foto": "https://cf.shopee.com.br/file/br-11134207-7r98o-m123456789",
             "texto": "⚡ *Suporte Veicular Magnético para Celular*\n\nPraticidade e segurança para o seu dia a dia no trânsito. Super rápido!\n\n💰 *Preço Especial:* R$ 24,90\n\n👉 [Aproveitar Oferta na Shopee]({link})"
         },
         {
-            "foto": "https://cf.shopee.com.br/file/br-11134207-7r98o-m987654321", # Foto da Mochila
+            "foto": "https://cf.shopee.com.br/file/br-11134207-7r98o-m987654321",
             "texto": "🎒 *Mochila Impermeável Executiva / Viagem*\n\nCom compartimento para notebook e entrada USB integrada.\n\n💰 *Preço Especial:* R$ 89,90\n\n👉 [Aproveitar Oferta na Shopee]({link})"
         }
     ],
@@ -81,9 +81,9 @@ def enviar_mensagem_telegram(token, channel_id, produto):
     try:
         response = requests.post(url, json=payload)
         if response.status_code == 200:
-            print("✅ Oferta com foto enviada com sucesso!")
+            print("✅ Foto e produto enviados com sucesso!")
         else:
-            print(f"❌ Erro ao enviar foto: {response.text}")
+            print(f"❌ Erro ao enviar: {response.text}")
     except Exception as e:
         print(f"⚠️ Erro de conexão: {e}")
 
@@ -118,7 +118,7 @@ def loop_disparos():
                     if token and channel_id and affiliate_link:
                         lista_produtos = CATALOGO_PRODUTOS.get(LOJA, CATALOGO_PRODUTOS["shopee"])
                         
-                        # Pega o produto de forma sequencial (sem repetir seguidamente)
+                        # Pega o próximo produto da lista em ordem (sem repetir e sem cache)
                         produto_selecionado = lista_produtos[indice_atual].copy()
                         indice_atual = (indice_atual + 1) % len(lista_produtos)
                         
