@@ -3,356 +3,179 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Robô de Afiliados Pro - Painel Firebase</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    
-    <!-- SDKs do Firebase (Auth e Firestore) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        const firebaseConfig = {
-          apiKey: "AIzaSyB4N7gvqdgIQMxM7Ft5jYMYfno1nox13cw",
-          authDomain: "robo-afiliados-pro.firebaseapp.com",
-          projectId: "robo-afiliados-pro",
-          storageBucket: "robo-afiliados-pro.firebasestorage.app",
-          messagingSenderId: "486833496863",
-          appId: "1:486833496863:web:ec3001a92ae2c4d934c62a",
-          measurementId: "G-5QS5WLX996"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        window.firebaseAuth = auth;
-        window.firebaseDb = db;
-        window.signInWithEmailAndPassword = signInWithEmailAndPassword;
-        window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
-        window.signOut = signOut;
-        window.doc = doc;
-        window.setDoc = setDoc;
-        window.getDoc = getDoc;
-
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                document.getElementById('userGreeting').innerText = "Painel: " + user.email;
-                trocarTela('dashboard');
-                await carregarConfiguracoes(user.uid);
-            } else {
-                trocarTela('landing');
-            }
-        });
-    </script>
-
+    <title>Painel - Bot Shopee & Telegram</title>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <style>
-        :root {
-            --bg-main: #0f172a;
-            --bg-card: #1e293b;
-            --bg-input: #090d16;
-            --border-color: #334155;
-            --primary: #10b981;
-            --primary-hover: #059669;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --danger: #ef4444;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        body { background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; padding: 20px; display: flex; justify-content: center; align-items: center; }
-        
-        .container { width: 100%; max-width: 520px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
-        
-        .logo-area { text-align: center; margin-bottom: 20px; }
-        .logo-area i { font-size: 48px; color: var(--primary); margin-bottom: 8px; }
-        .logo-area h1 { font-size: 22px; font-weight: 700; color: var(--text-main); }
-        .logo-area p { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
-
-        .hidden { display: none !important; }
-
-        .form-group { margin-bottom: 14px; }
-        label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
-        input, select { width: 100%; padding: 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); font-size: 14px; outline: none; transition: border 0.2s; }
-        input:focus, select:focus { border-color: var(--primary); }
-
-        .section-divider {
-            font-size: 11px;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            margin: 20px 0 10px 0;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 4px;
-            font-weight: 700;
-        }
-
-        .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-        .btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; text-decoration: none; text-align: center; }
-        .btn:hover { background: var(--primary-hover); }
-        .btn-whatsapp { background: #25d366; }
-        .btn-whatsapp:hover { background: #1ebe5d; }
-        .btn-secondary { background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); }
-        .btn-secondary:hover { background: var(--border-color); color: var(--text-main); }
-
-        .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; text-align: center; margin-bottom: 16px; }
-        .badge.active { background: rgba(16, 185, 129, 0.2); color: var(--primary); border: 1px solid var(--primary); }
-
-        .landing-features { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; margin-bottom: 16px; font-size: 13px; color: var(--text-muted); line-height: 1.6; }
-        .landing-features h3 { color: var(--primary); font-size: 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-        .landing-features ul { padding-left: 18px; }
-
-        .tutorial-box { background: var(--bg-input); border: 1px dashed var(--border-color); padding: 14px; border-radius: 8px; margin-top: 14px; }
-        .tutorial-box h3 { font-size: 14px; color: var(--primary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-        .tutorial-box ol { padding-left: 18px; font-size: 12px; color: var(--text-muted); line-height: 1.5; }
-
-        .link-switch { text-align: center; margin-top: 16px; font-size: 13px; color: var(--text-muted); }
-        .link-switch a { color: var(--primary); text-decoration: none; font-weight: 600; cursor: pointer; }
-        .link-switch a:hover { text-decoration: underline; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #0f172a; color: #f8fafc; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { background-color: #1e293b; padding: 30px; border-radius: 12px; width: 100%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        h2 { text-align: center; margin-bottom: 20px; color: #38bdf8; font-size: 1.5rem; }
+        .section-title { font-size: 0.9rem; color: #94a3b8; margin: 20px 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #334155; padding-bottom: 5px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 0.85rem; margin-bottom: 5px; color: #cbd5e1; }
+        input, select { width: 100%; padding: 10px 12px; background-color: #0f172a; border: 1px solid #334155; color: #fff; border-radius: 6px; font-size: 0.95rem; }
+        input:focus, select:focus { border-color: #38bdf8; outline: none; }
+        .row { display: flex; gap: 10px; }
+        .row .form-group { flex: 1; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1rem; transition: background 0.2s; margin-top: 10px; }
+        .btn-save { background-color: #10b981; color: white; }
+        .btn-save:hover { background-color: #059669; }
+        .btn-test { background-color: #3b82f6; color: white; }
+        .btn-test:hover { background-color: #2563eb; }
+        .btn-logout { background-color: transparent; color: #ef4444; border: 1px solid #ef4444; margin-top: 15px; }
+        .btn-logout:hover { background-color: rgba(239, 68, 68, 0.1); }
+        #status-msg { text-align: center; margin-top: 15px; font-size: 0.85rem; }
     </style>
 </head>
 <body>
 
-<div class="container">
-
-    <!-- TELA 1: LANDING PAGE -->
-    <div id="landingScreen">
-        <div class="logo-area">
-            <i class="ph ph-robot"></i>
-            <h1>Robô de Afiliados Pro</h1>
-            <p>Seu sistema inteligente de postagens automáticas</p>
-        </div>
-
-        <div class="landing-features">
-            <h3><i class="ph ph-sparkle"></i> Como Funciona?</h3>
-            <ul>
-                <li>Dispara ofertas da Shopee automaticamente no seu canal do Telegram.</li>
-                <li>Limpa mensagens antigas para manter seu canal organizado.</li>
-                <li><b>Painel na Nuvem:</b> Gerencie tudo de forma segura e automatizada.</li>
-            </ul>
-        </div>
-
-        <a href="https://wa.me/5519997648211?text=Olá%20Cristian,%20quero%20saber%20mais%20sobre%20o%20Robô%20de%20Afiliados!" target="_blank" class="btn btn-whatsapp">
-            <i class="ph ph-whatsapp-logo"></i> Falar com o Suporte
-        </a>
-
-        <button class="btn" onclick="trocarTela('register')" style="margin-top: 10px;"><i class="ph ph-user-plus"></i> Criar Conta</button>
+    <div class="container">
+        <h2>Painel do Robô</h2>
         
-        <div class="link-switch">
-            Já tem uma conta? <a onclick="trocarTela('auth')">Fazer Login</a>
-        </div>
-    </div>
-
-    <!-- TELA 2: LOGIN -->
-    <div id="authScreen" class="hidden">
-        <div class="logo-area">
-            <i class="ph ph-sign-in"></i>
-            <h1>Entrar no Painel</h1>
-            <p>Acesse sua conta do robô</p>
-        </div>
-
-        <div class="form-group">
-            <label>E-mail</label>
-            <input type="email" id="loginEmail" placeholder="seu@email.com">
-        </div>
-        <div class="form-group">
-            <label>Senha</label>
-            <input type="password" id="loginPass" placeholder="••••••••">
-        </div>
-
-        <button class="btn" onclick="fazerLoginReal()"><i class="ph ph-sign-in"></i> Entrar</button>
+        <div class="section-title">🔑 Conexão Telegram & Shopee</div>
         
-        <div class="link-switch">
-            <a onclick="trocarTela('landing')">← Voltar</a> | <a onclick="trocarTela('register')">Criar conta</a>
-        </div>
-    </div>
-
-    <!-- TELA 3: CADASTRO -->
-    <div id="registerScreen" class="hidden">
-        <div class="logo-area">
-            <i class="ph ph-user-plus"></i>
-            <h1>Criar Conta</h1>
-            <p>Tenha acesso imediato ao painel</p>
+        <div class="form-group">
+            <label for="bot-token">Token do Bot do Telegram</label>
+            <input type="text" id="bot-token" placeholder="Ex: 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ">
         </div>
 
         <div class="form-group">
-            <label>E-mail</label>
-            <input type="email" id="regEmail" placeholder="seu@email.com">
+            <label for="channel-id">ID do Canal (ex: @seu_canal)</label>
+            <input type="text" id="channel-id" placeholder="Ex: @cristian_ofertas_bot_pro">
         </div>
+
         <div class="form-group">
-            <label>Senha (mínimo 6 caracteres)</label>
-            <input type="password" id="regPass" placeholder="••••••••">
+            <label for="aff-link">Seu Link de Afiliado Shopee</label>
+            <input type="text" id="aff-link" placeholder="Ex: https://s.shopee.com.br/...">
         </div>
 
-        <button class="btn" onclick="fazerCadastroReal()"><i class="ph ph-check-circle"></i> Cadastrar Conta</button>
-        
-        <div class="link-switch">
-            <a onclick="trocarTela('landing')">← Voltar</a> | <a onclick="trocarTela('auth')">Fazer Login</a>
-        </div>
-    </div>
-
-    <!-- TELA 4: DASHBOARD -->
-    <div id="dashboardScreen" class="hidden">
-        <div class="logo-area" style="margin-bottom: 10px;">
-            <i class="ph ph-sliders-horizontal" style="font-size: 28px;"></i>
-            <h1 id="userGreeting">Painel do Cliente</h1>
-            <div id="licenseBadge" class="badge active">Licença Ativa (Firebase Cloud)</div>
-        </div>
-
-        <div id="configSection">
-            <div class="section-divider">🔑 Conexão Telegram & Shopee</div>
-
+        <div class="section-title">📦 Volume de Postagens</div>
+        <div class="row">
             <div class="form-group">
-                <label><i class="ph ph-telegram-logo" style="color: #38bdf8;"></i> Token do Bot do Telegram</label>
-                <input type="text" id="botToken" value="8616829338:AAHHLoPRw5uvx4c01bkRI">
+                <label for="qtd">Quantidade</label>
+                <input type="number" id="qtd" value="10">
             </div>
-
             <div class="form-group">
-                <label><i class="ph ph-chat-centered-text"></i> ID do Canal (ex: @seu_canal)</label>
-                <input type="text" id="channelId" value="@cristian_ofertas_bot_pro">
-            </div>
-
-            <div class="form-group">
-                <label><i class="ph ph-link"></i> Seu Link de Afiliado Shopee</label>
-                <input type="text" id="affLink" value="https://s.shopee.com.br/6VOwp1jg5L">
-            </div>
-
-            <div class="section-divider">📦 Volume de Postagens</div>
-            <div class="row-2">
-                <div class="form-group">
-                    <label>Quantidade</label>
-                    <input type="number" id="postQuantity" value="10" min="1" max="500">
-                </div>
-                <div class="form-group">
-                    <label>Frequência</label>
-                    <select id="postPeriod">
-                        <option value="day">Por Dia</option>
-                        <option value="week">Por Semana</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="section-divider">🧹 Limpeza Automática do Canal</div>
-            <div class="form-group">
-                <label>Apagar mensagens antigas a cada:</label>
-                <select id="autoCleanInterval">
-                    <option value="7" selected>A cada 7 Dias (Semanal)</option>
-                    <option value="15">A cada 15 Dias</option>
-                    <option value="30">A cada 30 Dias (Mensal)</option>
-                    <option value="never">Desativar</option>
+                <label for="freq">Frequência</label>
+                <select id="freq">
+                    <option value="Por Dia">Por Dia</option>
+                    <option value="Por Hora">Por Hora</option>
                 </select>
             </div>
-
-            <button class="btn" onclick="salvarConfiguracoesNoFirebase()"><i class="ph ph-floppy-disk"></i> Salvar na Nuvem</button>
-            <button class="btn btn-secondary" onclick="abrirTutorial()" style="margin-top: 8px;"><i class="ph ph-book-open"></i> Ver Tutorial</button>
         </div>
 
-        <!-- Tutorial -->
-        <div id="tutorialBox" class="hidden tutorial-box">
-            <h3><i class="ph ph-info"></i> Passo a Passo:</h3>
-            <ol>
-                <li>Crie seu bot no <b>@BotFather</b> e copie o Token.</li>
-                <li>Crie um Canal Público, adicione o bot como <b>Administrador</b>.</li>
-                <li>Cole as informações acima e clique em "Salvar na Nuvem".</li>
-            </ol>
-            <button class="btn btn-secondary" onclick="fecharTutorial()" style="margin-top: 8px; padding: 8px;">Ocultar</button>
+        <div class="section-title">🧹 Limpeza Automática do Canal</div>
+        <div class="form-group">
+            <label for="cleanup">Apagar mensagens antigas a cada:</label>
+            <select id="cleanup">
+                <option value="A cada 7 Dias (Semanal)">A cada 7 Dias (Semanal)</option>
+                <option value="A cada 15 Dias">A cada 15 Dias</option>
+                <option value="A cada 30 Dias (Mensal)">A cada 30 Dias (Mensal)</option>
+                <option value="Nunca">Nunca</option>
+            </select>
         </div>
 
-        <div class="link-switch" style="margin-top: 16px;">
-            <a onclick="fazerLogoutReal()" style="color: var(--danger);">Sair da Conta</a>
-        </div>
+        <!-- Botões de Ação -->
+        <button class="btn btn-save" onclick="salvarConfiguracoes()">💾 Salvar na Nuvem</button>
+        <button class="btn btn-test" onclick="enviarTesteTelegram()">🚀 Testar Envio Imediato</button>
+        <button class="btn btn-logout" onclick="sairDaConta()">Sair da Conta</button>
+
+        <div id="status-msg"></div>
     </div>
 
-</div>
-
-<script>
-    function trocarTela(tela) {
-        document.getElementById('landingScreen').classList.add('hidden');
-        document.getElementById('authScreen').classList.add('hidden');
-        document.getElementById('registerScreen').classList.add('hidden');
-        document.getElementById('dashboardScreen').classList.add('hidden');
-
-        if(tela === 'landing') document.getElementById('landingScreen').classList.remove('hidden');
-        if(tela === 'auth') document.getElementById('authScreen').classList.remove('hidden');
-        if(tela === 'register') document.getElementById('registerScreen').classList.remove('hidden');
-        if(tela === 'dashboard') document.getElementById('dashboardScreen').classList.remove('hidden');
-    }
-
-    async function fazerLoginReal() {
-        const email = document.getElementById('loginEmail').value;
-        const pass = document.getElementById('loginPass').value;
-        try {
-            await window.signInWithEmailAndPassword(window.firebaseAuth, email, pass);
-            alert('✅ Login efetuado com sucesso!');
-        } catch (error) {
-            alert('❌ Erro ao entrar: ' + error.message);
-        }
-    }
-
-    async function fazerCadastroReal() {
-        const email = document.getElementById('regEmail').value;
-        const pass = document.getElementById('regPass').value;
-        try {
-            await window.createUserWithEmailAndPassword(window.firebaseAuth, email, pass);
-            alert('✅ Conta criada com sucesso!');
-        } catch (error) {
-            alert('❌ Erro ao cadastrar: ' + error.message);
-        }
-    }
-
-    async function fazerLogoutReal() {
-        await window.signOut(window.firebaseAuth);
-    }
-
-    async function salvarConfiguracoesNoFirebase() {
-        const user = window.firebaseAuth.currentUser;
-        if (!user) { alert('Sessão expirada.'); return; }
-
-        const dadosConfig = {
-            botToken: document.getElementById('botToken').value,
-            channelId: document.getElementById('channelId').value,
-            affLink: document.getElementById('affLink').value,
-            postQuantity: document.getElementById('postQuantity').value,
-            postPeriod: document.getElementById('postPeriod').value,
-            autoCleanInterval: document.getElementById('autoCleanInterval').value
+    <script>
+        // Configuração Firebase (Mantenha as suas credenciais originais se já estiverem integradas)
+        const firebaseConfig = {
+            // Suas chaves do Firebase aqui
         };
 
-        if(!dadosConfig.botToken || !dadosConfig.channelId) {
-            alert('⚠️ Preencha o Token do Bot e o ID do Canal.');
-            return;
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        // Salvar configurações no Firestore
+        function salvarConfiguracoes() {
+            const token = document.getElementById('bot-token').value.trim();
+            const channel = document.getElementById('channel-id').value.trim();
+            const affLink = document.getElementById('aff-link').value.trim();
+            const qtd = document.getElementById('qtd').value;
+            const freq = document.getElementById('freq').value;
+            const cleanup = document.getElementById('cleanup').value;
+
+            const msgDiv = document.getElementById('status-msg');
+
+            db.collection("configuracoes").doc("bot_settings").set({
+                telegram_token: token,
+                channel_id: channel,
+                affiliate_link: affLink,
+                quantidade: qtd,
+                frequencia: freq,
+                limpeza: cleanup,
+                atualizado_em: new Date()
+            })
+            .then(() => {
+                msgDiv.style.color = "#10b981";
+                msgDiv.innerText = "Configurações salvas com sucesso na nuvem!";
+            })
+            .catch((error) => {
+                msgDiv.style.color = "#ef4444";
+                msgDiv.innerText = "Erro ao salvar: " + error.message;
+            });
         }
 
-        try {
-            await window.setDoc(window.doc(window.firebaseDb, "configuracoes_bots", user.uid), dadosConfig);
-            alert('✅ Configurações salvas com segurança no Firebase!');
-        } catch (error) {
-            console.error(error);
-            alert('❌ Erro ao salvar na nuvem.');
-        }
-    }
+        // Função do Botão de Teste Direto
+        function enviarTesteTelegram() {
+            const token = document.getElementById('bot-token').value.trim();
+            const channel = document.getElementById('channel-id').value.trim();
+            const msgDiv = document.getElementById('status-msg');
 
-    async function carregarConfiguracoes(uid) {
-        try {
-            const docSnap = await window.getDoc(window.doc(window.firebaseDb, "configuracoes_bots", uid));
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                document.getElementById('botToken').value = data.botToken || '';
-                document.getElementById('channelId').value = data.channelId || '';
-                document.getElementById('affLink').value = data.affLink || '';
-                document.getElementById('postQuantity').value = data.postQuantity || '10';
-                document.getElementById('postPeriod').value = data.postPeriod || 'day';
-                document.getElementById('autoCleanInterval').value = data.autoCleanInterval || '7';
+            if (!token || !channel) {
+                msgDiv.style.color = "#ef4444";
+                msgDiv.innerText = "Preencha o Token e o ID do Canal antes de testar!";
+                return;
             }
-        } catch (error) {
-            console.error("Erro ao carregar dados do Firebase:", error);
+
+            msgDiv.style.color = "#38bdf8";
+            msgDiv.innerText = "A enviar mensagem de teste...";
+
+            const textoTeste = "🚀 *Teste de Conexão Bem-Sucedido!*\n\nO seu bot `ofertas_shopee_ml_bot` já está a comunicar perfeitamente com o canal `@cristian_ofertas_bot_pro`!";
+            const url = `https://api.telegram.org/bot${token}/sendMessage`;
+
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: channel,
+                    text: textoTeste,
+                    parse_mode: 'Markdown'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.ok) {
+                    msgDiv.style.color = "#10b981";
+                    msgDiv.innerText = "✅ Mensagem de teste enviada com sucesso para o Telegram!";
+                } else {
+                    msgDiv.style.color = "#ef4444";
+                    msgDiv.innerText = "❌ Erro do Telegram: " + data.description;
+                }
+            })
+            .catch(error => {
+                msgDiv.style.color = "#ef4444";
+                msgDiv.innerText = "❌ Erro de rede: " + error.message;
+            });
         }
-    }
 
-    function abrirTutorial() { document.getElementById('tutorialBox').classList.remove('hidden'); }
-    function fecharTutorial() { document.getElementById('tutorialBox').classList.add('hidden'); }
-</script>
-
+        function sairDaConta() {
+            auth.signOut().then(() => {
+                window.location.href = "login.html"; // ou a tela de login que utilize
+            });
+        }
+    </script>
 </body>
 </html>
