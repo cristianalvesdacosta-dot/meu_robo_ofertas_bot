@@ -13,7 +13,11 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return "🤖 Robô Multimarcas Pro está rodando 100% automatizado!"
+    return f"🤖 Robô Multimarcas Pro ({LOJA_ALVO.upper()}) está rodando 100% automatizado!"
+
+# Identifica qual loja este bot Render deve gerenciar (shopee ou natura)
+# Você pode definir a variável de ambiente LOJA no Render, ou ele assume 'natura' por padrão
+LOJA_ALVO = os.environ.get("LOJA", "natura").lower()
 
 # Inicialização Segura do Firebase
 db = None
@@ -25,7 +29,6 @@ try:
             cred = credentials.Certificate(cred_dict)
             firebase_admin.initialize_app(cred)
         else:
-            # Tenta buscar arquivo local caso exista
             cred = credentials.Certificate("firebase_credentials.json")
             firebase_admin.initialize_app(cred)
     db = firestore.client()
@@ -33,17 +36,21 @@ try:
 except Exception as e:
     print(f"⚠️ Aviso na inicialização do Firebase: {e}")
 
-def carregar_configuracoes_natura():
-    """Lê as configurações da Natura salvas no Firebase."""
+def carregar_configuracoes():
+    """Lê dinamicamente as configurações da loja correta no Firebase."""
     if not db:
         return None
     try:
-        doc_ref = db.collection("configuracoes").doc("natura_settings")
+        # Puxa 'shopee_settings' ou 'natura_settings' dependendo da instância
+        doc_name = "shopee_settings" if LOJA_ALVO == "shopee" else "natura_settings"
+        doc_ref = db.collection("configuracoes").doc(doc_name)
         doc = doc_ref.get()
         if doc.exists:
             return doc.to_dict()
+        else:
+            print(f"⚠️ Documento {doc_name} não encontrado no Firebase. Verifique o painel web.")
     except Exception as e:
-        print(f"Erro ao ler configurações da Natura: {e}")
+        print(f"Erro ao ler configurações do Firebase: {e}")
     return None
 
 def calcular_intervalo_segundos(frequencia, detalhe):
@@ -106,53 +113,73 @@ def salvar_produto_na_loja(produto_data):
 
 def loop_automatico_robo():
     """Loop contínuo que roda em segundo plano de forma autônoma."""
-    print("🚀 Robô em segundo plano iniciado com sucesso!")
+    print(f"🚀 Robô em segundo plano iniciado para a loja: {LOJA_ALVO.upper()}!")
     time.sleep(15) # Aguarda o sistema estabilizar
     
     while True:
         try:
-            config = carregar_configuracoes_natura()
+            config = carregar_configuracoes()
             if not config:
-                print("⚠️ Configurações da Natura não encontradas no Firebase. Aguardando...")
+                print(f"⚠️ Configurações da {LOJA_ALVO} não encontradas no Firebase. Tentando novamente em 60s...")
                 time.sleep(60)
                 continue
 
             token = config.get("telegram_token")
             channel_id = config.get("channel_id")
-            aff_link = config.get("affiliate_link", "https://www.minhaloja.natura.com/consultoria/ora_et_labora")
+            
+            if LOJA_ALVO == "shopee":
+                aff_link = config.get("affiliate_link", "https://s.shopee.com.br/6VOwp1jg5L")
+                nome_produto = "Achadinho Imperdível da Shopee"
+                preco_original = 199.00
+                desconto_percentual = 15
+                preco_com_desconto = preco_original - (preco_original * (desconto_percentual / 100))
+                cupom = "OFERTASHOPEE"
+                categoria = "Achadinhos"
+                foto_url = "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=800&q=80"
+                descricao_curta = "Produto selecionado com super desconto e frete grátis."
+                
+                mensagem_telegram = (
+                    f"🔥 *OFERTA EXCLUSIVA SHOPEE*\n\n"
+                    f"📱 *{nome_produto}*\n\n"
+                    f"❌ De: R$ {preco_original:.2f}".replace('.', ',') + f"\n"
+                    f"💰 *Por apenas: R$ {preco_com_desconto:.2f}* `(-{desconto_percentual}% OFF)`\n"
+                    f"🏷️ *Cupom:* `{cupom}`\n\n"
+                    f"📝 *Detalhes:* {descricao_curta}\n\n"
+                    f"🔗 *Compre aqui:*\n{aff_link}"
+                )
+            else:
+                aff_link = config.get("affiliate_link", "https://www.minhaloja.natura.com/consultoria/ora_et_labora")
+                nome_produto = "Deo Parfum Essencial Exclusivo Masculino 100ml"
+                preco_original = 180.00
+                desconto_percentual = 10
+                preco_com_desconto = preco_original - (preco_original * (desconto_percentual / 100))
+                cupom = "CLIENTEVIP"
+                categoria = "Perfumaria"
+                foto_url = "https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&w=800&q=80"
+                descricao_curta = "Fragrância marcante com notas amadeiradas e especiadas."
+                
+                mensagem_telegram = (
+                    f"🌸 *LANÇAMENTO / OFERTA NATURA*\n\n"
+                    f"✨ *{nome_produto}*\n\n"
+                    f"❌ De: R$ {preco_original:.2f}".replace('.', ',') + f"\n"
+                    f"💰 *Por apenas: R$ {preco_com_desconto:.2f}* `(-{desconto_percentual}% OFF)`\n"
+                    f"🏷️ *Cupom:* `{cupom}`\n\n"
+                    f"📝 *Detalhes:* {descricao_curta}\n\n"
+                    f"🔗 *Compre no meu Espaço Natura:*\n{aff_link}"
+                )
             
             freq = config.get("frequencia", "Por Minuto")
             detalhe = config.get("detalhe_frequencia", "1 minuto")
             intervalo_segundos = calcular_intervalo_segundos(freq, detalhe)
             
-            print(f"🔄 Executando ciclo Natura... Próximo em {intervalo_segundos}s.")
-            
-            # Dados do produto com o cálculo do cupom CLIENTEVIP (10% OFF)
-            nome_produto = "Deo Parfum Essencial Exclusivo Masculino 100ml"
-            preco_original = 180.00
-            desconto_percentual = 10
-            preco_com_desconto = preco_original - (preco_original * (desconto_percentual / 100))
-            cupom = "CLIENTEVIP"
-            categoria = "Perfumaria"
-            foto_url = "https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&w=800&q=80"
-            descricao_curta = "Fragrância marcante com notas amadeiradas e especiadas."
-            
-            # Mensagem detalhada para o Telegram
-            mensagem_telegram = (
-                f"🌸 *LANÇAMENTO / OFERTA NATURA*\n\n"
-                f"✨ *{nome_produto}*\n\n"
-                f"❌ De: R$ {preco_original:.2f}".replace('.', ',') + f"\n"
-                f"💰 *Por apenas: R$ {preco_com_desconto:.2f}* `(-{desconto_percentual}% OFF)`\n"
-                f"🏷️ *Cupom:* `{cupom}`\n\n"
-                f"📝 *Detalhes:* {descricao_curta}\n\n"
-                f"🔗 *Compre no meu Espaço Natura (com o cupom aplicado):*\n"
-                f"{aff_link}"
-            )
+            print(f"🔄 Executando ciclo {LOJA_ALVO}... Próximo disparo em {intervalo_segundos}s.")
 
             # Envia para o Telegram
             res_tg = enviar_telegram(token, channel_id, mensagem_telegram, foto_url)
             if res_tg.get("ok"):
-                print("✅ Oferta enviada para o Telegram com sucesso!")
+                print(f"✅ Oferta da {LOJA_ALVO} enviada para o Telegram com sucesso!")
+            else:
+                print(f"⚠️ Falha ao enviar no Telegram: {res_tg}")
             
             # Salva na Loja Digital (Firebase)
             produto_para_loja = {
@@ -163,7 +190,7 @@ def loop_automatico_robo():
                 "images": [foto_url],
                 "price": str(preco_original),
                 "discountPercent": str(desconto_percentual),
-                "description": f"✨ 10% de OFF garantido! Copie o cupom CLIENTEVIP e use em qualquer produto da loja.\n\n{descricao_curta}",
+                "description": f"✨ Desconto especial garantido!\n\n{descricao_curta}",
                 "link": aff_link,
                 "code": cupom,
                 "validityDays": 30,
@@ -176,7 +203,7 @@ def loop_automatico_robo():
             time.sleep(intervalo_segundos)
 
         except Exception as e:
-            print(f"❌ Erro no loop do robô: {e}")
+            print(f"❌ Erro no loop do robô ({LOJA_ALVO}): {e}")
             time.sleep(60)
 
 if __name__ == "__main__":
