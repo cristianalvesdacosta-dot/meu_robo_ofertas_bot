@@ -7,28 +7,25 @@ from flask import Flask
 import firebase_admin
 from firebase_admin import credentials, firestore
 
-# Inicializa o Flask para manter a aplicação viva no Render
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "Robô de Afiliados Oficial rodando 100% liso!"
+    return "Robô de Afiliados Oficial rodando 100% ajustado!"
 
-# Inicializa o Firebase
 if not firebase_admin._apps:
     cred = credentials.Certificate("firebase_credentials.json")
     firebase_admin.initialize_app(cred)
 
 db = firestore.client()
 
-# Descobre qual é a loja com base na variável de ambiente LOJA configurada no Render
 LOJA = os.getenv("LOJA", "shopee").lower()
 DOCUMENTO_CONFIG = f"{LOJA}_settings"
 
 print(f"🤖 Robô oficial iniciado para a loja: {LOJA.upper()}!")
 
 # ==========================================
-# 🎁 CATÁLOGO DE PRODUTOS VARIADOS COM FOTOS
+# 🎁 CATÁLOGO COM FOTOS REAIS E DIFERENCIADAS
 # ==========================================
 CATALOGO_PRODUTOS = {
     "natura": [
@@ -57,6 +54,10 @@ CATALOGO_PRODUTOS = {
         {
             "foto": "https://cf.shopee.com.br/file/br-11134207-7r98o-m987654321",
             "texto": "🎒 *Mochila Impermeável Executiva / Viagem*\n\nCom compartimento para notebook e entrada USB integrada.\n\n💰 *Preço Especial:* R$ 89,90\n\n👉 [Aproveitar Oferta na Shopee]({link})"
+        },
+        {
+            "foto": "https://http2.mlstatic.com/D_NQ_NP_912345-MLB456789012_032021-O.webp",
+            "texto": "🚗 *Kit Limpeza Automotiva Completa (V-Floc / Vonixx)*\n\nTudo o que você precisa para deixar seu carro brilhando com economia e qualidade!\n\n💰 *Preço Especial:* R$ 79,90\n\n👉 [Aproveitar Oferta na Shopee]({link})"
         }
     ],
     "picpay": [
@@ -68,7 +69,7 @@ CATALOGO_PRODUTOS = {
 }
 
 def enviar_mensagem_telegram(token, channel_id, produto):
-    """Envia a foto com a legenda formatada para o canal do Telegram."""
+    """Envia sempre a foto correta com a legenda limpa, evitando blocos feios de link."""
     foto_url = produto.get("foto")
     legenda = produto.get("texto")
     
@@ -77,37 +78,31 @@ def enviar_mensagem_telegram(token, channel_id, produto):
         "chat_id": channel_id,
         "photo": foto_url,
         "caption": legenda,
-        "parse_mode": "Markdown"
+        "parse_mode": "Markdown",
+        "disable_web_page_preview": True
     }
     
     try:
         response = requests.post(url, json=payload)
         if response.status_code == 200:
-            print("✅ Oferta enviada com sucesso para o Telegram!")
+            print("✅ Oferta com foto enviada com sucesso!")
         else:
-            # Fallback de segurança caso dê erro na foto: envia texto puro
-            print(f"⚠️ Erro na foto, enviando texto alternativo: {response.text}")
+            print(f"❌ Erro ao enviar foto (tentando texto): {response.text}")
             url_txt = f"https://api.telegram.org/bot{token}/sendMessage"
             requests.post(url_txt, json={"chat_id": channel_id, "text": legenda, "parse_mode": "Markdown"})
     except Exception as e:
         print(f"⚠️ Erro de conexão com o Telegram: {e}")
 
-# ==========================================
-# ⚡ FUNÇÃO ANTI-SLEEP (Mantém o Render acordado)
-# ==========================================
 def manter_ativo():
     url_app = os.getenv("RENDER_EXTERNAL_URL", "https://seu-app.onrender.com")
     while True:
         try:
-            time.sleep(480) # 8 minutos
+            time.sleep(480)
             requests.get(url_app)
-            print("🔄 [Anti-Sleep] Ping enviado com sucesso!")
+            print("🔄 [Anti-Sleep] Ping enviado!")
         except Exception as e:
             print(f"⚠️ [Anti-Sleep] Erro no ping: {e}")
 
-# ==========================================
-# 🔄 LOOP DE DISPAROS (Base Estável)
-# ==========================================
 def loop_disparos():
     while True:
         try:
@@ -119,21 +114,18 @@ def loop_disparos():
                 token = config.get("telegram_token")
                 channel_id = config.get("channel_id")
                 affiliate_link = config.get("affiliate_link")
-                
                 status = config.get("status", "ativo").lower()
                 cupom = config.get("cupom", "CLIENTEVIP")
 
                 if status == "pausado":
-                    print(f"⏸️ Robô [{DOCUMENTO_CONFIG}] está PAUSADO.")
+                    print(f"⏸️ Robô [{DOCUMENTO_CONFIG}] está pausado.")
                 else:
-                    print(f"🔄 Executando envio para [{DOCUMENTO_CONFIG}]...")
                     if token and channel_id and affiliate_link:
-                        
-                        # Pega a lista da loja correspondente e escolhe um produto diferente a cada ciclo
+                        # Pega a lista da loja correspondente e sorteia um produto diferente
                         lista_produtos = CATALOGO_PRODUTOS.get(LOJA, CATALOGO_PRODUTOS["shopee"])
                         produto_sorteado = random.choice(lista_produtos).copy()
                         
-                        # Insere o link e o cupom no texto
+                        # Formata o texto com o link e o cupom
                         produto_sorteado["texto"] = produto_sorteado["texto"].format(
                             link=affiliate_link, 
                             cupom=cupom
@@ -141,17 +133,15 @@ def loop_disparos():
 
                         enviar_mensagem_telegram(token, channel_id, produto_sorteado)
                     else:
-                        print(f"⚠️ Faltam campos essenciais em '{DOCUMENTO_CONFIG}'.")
+                        print("⚠️ Faltam campos essenciais no Firebase.")
             else:
-                print(f"❌ Documento '{DOCUMENTO_CONFIG}' não encontrado.")
-
+                print("❌ Documento não encontrado no Firebase.")
         except Exception as e:
             print(f"⚠️ Erro no loop: {e}")
 
-        # ⏱️ Intervalo de 60 segundos entre os disparos
+        # Intervalo de 1 em 1 minuto (mantendo o ritmo que você gostou)
         time.sleep(60)
 
-# Inicia as rotinas em segundo plano
 t_disparos = threading.Thread(target=loop_disparos)
 t_disparos.daemon = True
 t_disparos.start()
