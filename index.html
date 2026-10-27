@@ -11,7 +11,7 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #0f172a; color: #f8fafc; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .container { background-color: #1e293b; padding: 30px; border-radius: 12px; width: 100%; max-width: 550px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .container { background-color: #1e293b; padding: 30px; border-radius: 12px; width: 100%; max-width: 550px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); margin-top: 20px; margin-bottom: 20px;}
         h2 { text-align: center; margin-bottom: 20px; color: #38bdf8; font-size: 1.5rem; }
         .section-title { font-size: 0.9rem; color: #94a3b8; margin: 20px 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #334155; padding-bottom: 5px; }
         .form-group { margin-bottom: 15px; }
@@ -44,12 +44,23 @@
             <select id="plataforma" onchange="alternarPlataforma()">
                 <option value="shopee">Shopee (Canal da Shopee)</option>
                 <option value="natura" selected>Natura (Canal da Natura)</option>
+                <option value="picpay">PicPay (Canal do PicPay)</option>
+            </select>
+        </div>
+
+        <!-- 🛑 CONTROLE DE STATUS (LIGA / DESLIGA) -->
+        <div class="section-title">⚙️ Controle de Funcionamento</div>
+        <div class="form-group">
+            <label for="status-robo">Estado do Robô para esta Loja</label>
+            <select id="status-robo">
+                <option value="ativo" selected>🟢 Ativo (Enviando Ofertas Automaticamente)</option>
+                <option value="pausado">⏸️ Pausado (Em Silêncio / Parado)</option>
             </select>
         </div>
 
         <div class="section-title">🔑 Conexão Telegram & Link</div>
         <div class="form-group">
-            <label for="bot-token">Token do Bot do Telegram (Mesmo Bot para os 2)</label>
+            <label for="bot-token">Token do Bot do Telegram</label>
             <input type="text" id="bot-token" value="8616829338:AAHHLoPRw5uvx4c01bkRI">
         </div>
 
@@ -59,13 +70,26 @@
         </div>
 
         <div class="form-group">
-            <label id="label-aff-link" for="aff-link">Seu Link da Natura (Consultoria)</label>
+            <label id="label-aff-link" for="aff-link">Seu Link / Vitrine (Consultoria)</label>
             <input type="text" id="aff-link" value="https://www.minhaloja.natura.com/consultoria/ora_et_labora">
+        </div>
+
+        <!-- 🏷️ CONFIGURAÇÃO DE CUPOM E DESCONTO -->
+        <div class="section-title">🏷️ Cupom & Desconto Promocional</div>
+        <div class="row">
+            <div class="form-group">
+                <label for="cupom-codigo">Cupom Fixo</label>
+                <input type="text" id="cupom-codigo" value="CLIENTEVIP">
+            </div>
+            <div class="form-group">
+                <label for="desconto-porc">Desconto Aplicado (%)</label>
+                <input type="text" id="desconto-porc" value="10%">
+            </div>
         </div>
 
         <div class="section-title">📅 Dias de Funcionamento Automático</div>
         <div class="form-group">
-            <label>Selecione os dias em que o robô deve varrer e enviar:</label>
+            <label>Selecione os dias em que o robô deve rodar:</label>
             <div class="days-container">
                 <label class="day-checkbox"><input type="checkbox" name="dia" value="Seg" checked> Seg</label>
                 <label class="day-checkbox"><input type="checkbox" name="dia" value="Ter" checked> Ter</label>
@@ -89,14 +113,13 @@
                     <option value="Por Minuto" selected>Por Minuto (Intervalo Curto)</option>
                     <option value="Por Hora">Por Hora (Intervalo)</option>
                     <option value="Por Dia">Por Dia (Volume Diário)</option>
-                    <option value="Por Mes">Por Mês (Distribuição Mensal)</option>
                 </select>
             </div>
         </div>
 
         <div class="form-group" id="grupo-detalhe-freq">
-            <label id="label-detalhe-freq" for="detalhe-freq">Intervalo (Ex: 1 minuto, 5 minutos)</label>
-            <input type="text" id="detalhe-freq" value="1 minuto" placeholder="Ex: 1 minuto">
+            <label id="label-detalhe-freq" for="detalhe-freq">Intervalo (Ex: 1 minuto, 60 minutos)</label>
+            <input type="text" id="detalhe-freq" value="60 minutos" placeholder="Ex: 60 minutos">
         </div>
 
         <div class="section-title">🧹 Limpeza Automática do Canal</div>
@@ -106,7 +129,7 @@
                 <option value="A cada 7 Dias (Semanal)">A cada 7 Dias (Semanal)</option>
                 <option value="A cada 15 Dias">A cada 15 Dias</option>
                 <option value="A cada 30 Dias (Mensal)">A cada 30 Dias (Mensal)</option>
-                <option value="Nunca">Nunca</option>
+                <option value="Nunca" selected>Nunca</option>
             </select>
         </div>
 
@@ -153,6 +176,11 @@
                 inputChannel.value = "@cristian_ofertas_natura";
                 labelLink.innerText = "Seu Link de Consultoria Natura";
                 inputLink.value = "https://www.minhaloja.natura.com/consultoria/ora_et_labora";
+            } else if (plat === 'picpay') {
+                labelChannel.innerText = "ID do Canal do PicPay";
+                inputChannel.value = "@cristian_ofertas_picpay";
+                labelLink.innerText = "Seu Link de Convite / Indicação PicPay";
+                inputLink.value = "https://picpay.me/seu_usuario";
             }
         }
 
@@ -162,17 +190,14 @@
             const input = document.getElementById('detalhe-freq');
 
             if (freq === 'Por Minuto') {
-                label.innerText = "Intervalo em Minutos (Ex: 1 minuto, 5 minutos)";
-                input.value = "1 minuto";
+                label.innerText = "Intervalo em Minutos (Ex: 60 minutos)";
+                input.value = "60 minutos";
             } else if (freq === 'Por Hora') {
-                label.innerText = "Intervalo em Horas (Ex: 1 hora, 2 horas)";
-                input.value = "1 hora";
+                label.innerText = "Intervalo em Horas (Ex: 2 horas)";
+                input.value = "2 horas";
             } else if (freq === 'Por Dia') {
                 label.innerText = "Volume ou Intervalo Diário (Ex: 10 por dia)";
                 input.value = "10 por dia";
-            } else if (freq === 'Por Mes') {
-                label.innerText = "Meta Mensal (Ex: 50 produtos no mês)";
-                input.value = "50 produtos";
             }
         }
 
@@ -181,6 +206,9 @@
             const channel = document.getElementById('channel-id').value.trim();
             const plataforma = document.getElementById('plataforma').value;
             const affLink = document.getElementById('aff-link').value.trim();
+            const statusRobo = document.getElementById('status-robo').value;
+            const cupomCodigo = document.getElementById('cupom-codigo').value.trim();
+            const descontoPorc = document.getElementById('desconto-porc').value.trim();
             const qtd = document.getElementById('qtd').value.trim();
             const freq = document.getElementById('freq').value;
             const detalheFreq = document.getElementById('detalhe-freq').value.trim();
@@ -195,16 +223,18 @@
             msgDiv.style.display = "block";
             msgDiv.style.backgroundColor = "#334155";
             msgDiv.style.color = "#38bdf8";
-            msgDiv.innerText = `Salvando configurações da ${plataforma.toUpperCase()} na nuvem...`;
+            msgDiv.innerText = `Salvando configurações e status da ${plataforma.toUpperCase()} na nuvem...`;
 
-            // Salva em documentos separados: 'shopee_settings' ou 'natura_settings'
-            const docName = plataforma === 'shopee' ? 'shopee_settings' : 'natura_settings';
+            const docName = `${plataforma}_settings`;
 
             db.collection("configuracoes").doc(docName).set({
                 plataforma: plataforma,
                 telegram_token: token,
                 channel_id: channel,
                 affiliate_link: affLink,
+                status: statusRobo,          // <--- Chave de pausa/ativo direto pelo painel
+                cupom: cupomCodigo,          // <--- Cupom fixo (CLIENTEVIP)
+                desconto: descontoPorc,      // <--- Porcentagem de desconto (10%)
                 quantidade: qtd,
                 frequencia: freq,
                 detalhe_frequencia: detalheFreq,
@@ -229,6 +259,7 @@
             const channel = document.getElementById('channel-id').value.trim();
             const plataforma = document.getElementById('plataforma').value;
             const affLink = document.getElementById('aff-link').value.trim();
+            const cupomCodigo = document.getElementById('cupom-codigo').value.trim();
             const msgDiv = document.getElementById('status-msg');
 
             if (!token || !channel) {
@@ -242,11 +273,9 @@
             msgDiv.style.display = "block";
             msgDiv.style.backgroundColor = "#334155";
             msgDiv.style.color = "#38bdf8";
-            msgDiv.innerText = `Enviando teste para ${channel}...`;
+            msgDiv.innerText = `Enviando teste com cupom para ${channel}...`;
 
-            const textoTeste = plataforma === 'shopee' ?
-                `🔥 *OFERTA EXCLUSIVA SHOPEE*\n\n📱 *Produto de Demonstração*\n💰 De R$ 199,00 por *R$ 89,00*\n\n🔗 *Compre aqui:*\n${affLink}` :
-                `🌸 *LANÇAMENTO NATURA*\n\n✨ *Perfume Kaiak / Essencial*\n💰 Oferta de Consultoria Exclusiva!\n\n🔗 *Compre no meu Espaço Natura:*\n${affLink}`;
+            const textoTeste = `🔥 *OFERTA DE TESTE - ${plataforma.toUpperCase()}*\n\n✨ *Produto Exclusivo*\n💰 Valor Especial com 10% OFF\n🏷️ *Cupom:* \`${cupomCodigo}\`\n\n🔗 *Compre aqui:*\n${affLink}`;
 
             fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
                 method: 'POST',
