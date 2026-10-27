@@ -2,16 +2,10 @@ import os
 import time
 import threading
 import requests
-from flask import Flask
 import firebase_admin
 from firebase_admin import credentials, firestore
 
-app = Flask(__name__)
-
-@app.route('/')
-def home():
-    return "Robô de Afiliados Rodando 100% Limpo!"
-
+# Inicializa o Firebase
 if not firebase_admin._apps:
     cred = credentials.Certificate("firebase_credentials.json")
     firebase_admin.initialize_app(cred)
@@ -21,7 +15,7 @@ db = firestore.client()
 LOJA = os.getenv("LOJA", "shopee").lower()
 DOCUMENTO_CONFIG = f"{LOJA}_settings"
 
-print(f"🤖 Robô limpo e iniciado para a loja: {LOJA.upper()}!")
+print(f"🤖 Robô infalível iniciado para a loja: {LOJA.upper()}!")
 
 # ==========================================
 # 🎁 CATÁLOGO OFICIAL COM FOTOS REAIS E DIFERENTES
@@ -81,26 +75,19 @@ def enviar_mensagem_telegram(token, channel_id, produto):
     try:
         response = requests.post(url, json=payload)
         if response.status_code == 200:
-            print("✅ Foto e produto enviados com sucesso!")
+            print("✅ Oferta com foto disparada com sucesso no automático!")
         else:
-            print(f"❌ Erro ao enviar: {response.text}")
+            print(f"❌ Erro do Telegram: {response.text}")
     except Exception as e:
         print(f"⚠️ Erro de conexão: {e}")
 
-def manter_ativo():
-    url_app = os.getenv("RENDER_EXTERNAL_URL", "https://seu-app.onrender.com")
-    while True:
-        try:
-            time.sleep(480)
-            requests.get(url_app)
-            print("🔄 [Anti-Sleep] Ping enviado!")
-        except Exception as e:
-            print(f"⚠️ Erro no ping: {e}")
-
 def loop_disparos():
     global indice_atual
+    print("🚀 Loop de disparos automáticos iniciado em segundo plano!")
+    
     while True:
         try:
+            print(f"🔍 [Loop] Buscando documento '{DOCUMENTO_CONFIG}' no Firebase...")
             doc_ref = db.collection("configuracoes").document(DOCUMENTO_CONFIG)
             doc = doc_ref.get()
 
@@ -109,41 +96,44 @@ def loop_disparos():
                 token = config.get("telegram_token")
                 channel_id = config.get("channel_id")
                 affiliate_link = config.get("affiliate_link")
-                status = config.get("status", "ativo").lower()
                 cupom = config.get("cupom", "CLIENTEVIP")
 
-                if status == "pausado":
-                    print(f"⏸️ Robô [{DOCUMENTO_CONFIG}] está pausado.")
+                if token and channel_id and affiliate_link:
+                    lista_produtos = CATALOGO_PRODUTOS.get(LOJA, CATALOGO_PRODUTOS["shopee"])
+                    
+                    produto_selecionado = lista_produtos[indice_atual].copy()
+                    indice_atual = (indice_atual + 1) % len(lista_produtos)
+                    
+                    produto_selecionado["texto"] = produto_selecionado["texto"].format(
+                        link=affiliate_link, 
+                        cupom=cupom
+                    )
+
+                    print(f"📤 [Loop] Enviando produto índice {indice_atual} para o canal {channel_id}...")
+                    enviar_mensagem_telegram(token, channel_id, produto_selecionado)
                 else:
-                    if token and channel_id and affiliate_link:
-                        lista_produtos = CATALOGO_PRODUTOS.get(LOJA, CATALOGO_PRODUTOS["shopee"])
-                        
-                        # Pega o próximo produto da lista em ordem (sem repetir e sem cache)
-                        produto_selecionado = lista_produtos[indice_atual].copy()
-                        indice_atual = (indice_atual + 1) % len(lista_produtos)
-                        
-                        produto_selecionado["texto"] = produto_selecionado["texto"].format(
-                            link=affiliate_link, 
-                            cupom=cupom
-                        )
-
-                        enviar_mensagem_telegram(token, channel_id, produto_selecionado)
-                    else:
-                        print("⚠️ Faltam campos essenciais no Firebase.")
+                    print("⚠️ [Loop] Faltam campos (token, channel_id ou affiliate_link) no Firebase.")
             else:
-                print("❌ Documento não encontrado no Firebase.")
-        except Exception as e:
-            print(f"⚠️ Erro no loop: {e}")
+                print(f"❌ [Loop] Documento '{DOCUMENTO_CONFIG}' não encontrado no Firebase.")
 
+        except Exception as e:
+            print(f"⚠️ [Loop] Erro crítico no ciclo: {e}")
+
+        # Aguarda 60 segundos (1 minuto) exatos para o próximo envio
         time.sleep(60)
 
-t_disparos = threading.Thread(target=loop_disparos)
-t_disparos.daemon = True
-t_disparos.start()
+# Inicia o loop de disparos imediatamente antes de qualquer coisa
+t = threading.Thread(target=loop_disparos)
+t.daemon = True
+t.start()
 
-t_ping = threading.Thread(target=manter_ativo)
-t_ping.daemon = True
-t_ping.start()
+# Mantém um servidor HTTP leve rodando só para o Render não reclamar de porta fechada
+from flask import Flask
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Robô de Afiliados Rodando no Automático!"
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
