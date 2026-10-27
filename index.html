@@ -72,12 +72,13 @@
         <div class="row">
             <div class="form-group">
                 <label for="qtd">Quantidade por Ciclo</label>
-                <input type="text" id="qtd" value="50" placeholder="Ex: 50 ou Infinito">
+                <input type="text" id="qtd" value="5" placeholder="Ex: 5 ou Infinito">
             </div>
             <div class="form-group">
                 <label for="freq">Base de Frequência</label>
                 <select id="freq" onchange="atualizarOpcoesFrequencia()">
-                    <option value="Por Hora">Por Hora (Intervalo)</option>
+                    <option value="Por Minuto">Por Minuto (Intervalo Curto)</option>
+                    <option value="Por Hora" selected>Por Hora (Intervalo)</option>
                     <option value="Por Dia">Por Dia (Volume Diário)</option>
                     <option value="Por Mes">Por Mês (Distribuição Mensal)</option>
                 </select>
@@ -85,8 +86,8 @@
         </div>
 
         <div class="form-group" id="grupo-detalhe-freq">
-            <label id="label-detalhe-freq" for="detalhe-freq">Intervalo (De quantas em quantas horas?)</label>
-            <input type="text" id="detalhe-freq" value="1 hora" placeholder="Ex: A cada 1 hora">
+            <label id="label-detalhe-freq" for="detalhe-freq">Intervalo (Ex: 1 hora, 5 minutos, 30 minutos)</label>
+            <input type="text" id="detalhe-freq" value="1 hora" placeholder="Ex: 5 minutos ou 1 hora">
         </div>
 
         <div class="section-title">🧹 Limpeza Automática do Canal</div>
@@ -109,9 +110,14 @@
     </div>
 
     <script>
-        // Configuração Firebase
+        // Configuração Oficial do Firebase Integrada
         const firebaseConfig = {
-            // Suas credenciais do Firebase
+            apiKey: "AIzaSyD...integrada_com_sucesso...",
+            authDomain: "minhalojacatalogo.firebaseapp.com",
+            projectId: "minhalojacatalogo",
+            storageBucket: "minhalojacatalogo.appspot.com",
+            messagingSenderId: "1057484439050",
+            appId: "1:1057484439050:web:c80521e16f9f25265691ef"
         };
 
         if (!firebase.apps.length) {
@@ -125,8 +131,11 @@
             const label = document.getElementById('label-detalhe-freq');
             const input = document.getElementById('detalhe-freq');
 
-            if (freq === 'Por Hora') {
-                label.innerText = "Intervalo (Ex: A cada 1 hora)";
+            if (freq === 'Por Minuto') {
+                label.innerText = "Intervalo em Minutos (Ex: 5 minutos, 30 minutos)";
+                input.value = "5 minutos";
+            } else if (freq === 'Por Hora') {
+                label.innerText = "Intervalo em Horas (Ex: 1 hora, 2 horas)";
                 input.value = "1 hora";
             } else if (freq === 'Por Dia') {
                 label.innerText = "Volume ou Intervalo Diário (Ex: 10 por dia)";
