@@ -150,7 +150,7 @@
                 inputLink.value = "https://s.shopee.com.br/6VOwp1jg5L";
             } else if (plat === 'natura') {
                 labelChannel.innerText = "ID do Canal da Natura";
-                inputChannel.value = "@cristian_ofertas_natura"; // Substitua pelo nome do seu canal da Natura
+                inputChannel.value = "@cristian_ofertas_natura";
                 labelLink.innerText = "Seu Link de Consultoria Natura";
                 inputLink.value = "https://www.minhaloja.natura.com/consultoria/ora_et_labora";
             }
@@ -246,7 +246,7 @@
 
             const textoTeste = plataforma === 'shopee' ?
                 `🔥 *OFERTA EXCLUSIVA SHOPEE*\n\n📱 *Produto de Demonstração*\n💰 De R$ 199,00 por *R$ 89,00*\n\n🔗 *Compre aqui:*\n${affLink}` :
-                `🌸 *LANCAMENTO NATURA*\n\n✨ *Perfume Kaiak / Essencial*\n💰 Oferta de Consultoria Exclusiva!\n\n🔗 *Compre no meu Espaço Natura:*\n${affLink}`;
+                `🌸 *LANÇAMENTO NATURA*\n\n✨ *Perfume Kaiak / Essencial*\n💰 Oferta de Consultoria Exclusiva!\n\n🔗 *Compre no meu Espaço Natura:*\n${affLink}`;
 
             fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
                 method: 'POST',
