@@ -6,14 +6,14 @@ from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
-# Configurações padrão (serão atualizadas pelo painel ou variáveis)
+# Configurações padrão lidas diretamente das variáveis de ambiente do Render
 CONFIG = {
     "bot_token": os.environ.get("BOT_TOKEN", ""),
-    "channel_id": os.environ.get("CHANNEL_ID", "@seu_canal"),
+    "channel_id": os.environ.get("CHANNEL_ID", ""),
     "affiliate_link": os.environ.get("AFFILIATE_LINK", "https://s.shopee.com.br/"),
-    "post_quantity": 10,
-    "post_period": "day",        # 'day', 'week', 'month'
-    "auto_clean_days": 7,        # Dias para limpar mensagens antigas
+    "post_quantity": int(os.environ.get("POST_QUANTITY", 10)),
+    "post_period": os.environ.get("POST_PERIOD", "day"),        # 'day', 'week'
+    "auto_clean_days": os.environ.get("AUTO_CLEAN_DAYS", "7"),  # Dias ou 'never'
     "offer_validity": "⚡ Oferta Limitada - Válida por Tempo Limitado!"
 }
 
@@ -26,13 +26,13 @@ def home():
 def update_config():
     data = request.json
     if data:
-        CONFIG['bot_token'] = data.get('botToken', CONFIG['bot_token'])
-        CONFIG['channel_id'] = data.get('channelId', CONFIG['channel_id'])
-        CONFIG['affiliate_link'] = data.get('affLink', CONFIG['affiliate_link'])
-        CONFIG['post_quantity'] = int(data.get('postQuantity', CONFIG['post_quantity']))
-        CONFIG['post_period'] = data.get('postPeriod', CONFIG['post_period'])
-        CONFIG['auto_clean_days'] = int(data.get('autoCleanInterval', CONFIG['auto_clean_days']))
-        CONFIG['offer_validity'] = data.get('offerValidityText', CONFIG['offer_validity'])
+        # Se quiser atualizar dinamicamente via requisição externa
+        if 'botToken' in data: CONFIG['bot_token'] = data['botToken']
+        if 'channelId' in data: CONFIG['channel_id'] = data['channelId']
+        if 'affLink' in data: CONFIG['affiliate_link'] = data['affLink']
+        if 'postQuantity' in data: CONFIG['post_quantity'] = int(data['postQuantity'])
+        if 'postPeriod' in data: CONFIG['post_period'] = data['postPeriod']
+        if 'autoCleanInterval' in data: CONFIG['auto_clean_days'] = data['autoCleanInterval']
         return jsonify({"status": "success", "message": "Configurações atualizadas com sucesso!"})
     return jsonify({"status": "error", "message": "Dados inválidos"}), 400
 
@@ -53,11 +53,11 @@ def self_ping():
 def enviar_oferta_telegram():
     token = CONFIG['bot_token']
     channel = CONFIG['channel_id']
+    
     if not token or not channel:
-        print("⚠️ Token ou Canal do Telegram não configurados.")
+        print("⚠️ Token ou Canal do Telegram não configurados nas variáveis de ambiente.")
         return
 
-    # Exemplo de simulação de busca de produto (Aqui você conecta sua API da Shopee/ML)
     texto_mensagem = (
         f"🔥 **SUPER OPORTUNIDADE DE HORA EM HORA!**\n\n"
         f"Garanta este produto com desconto exclusivo.\n\n"
@@ -83,28 +83,22 @@ def enviar_oferta_telegram():
 
 # --- FUNÇÃO DE LIMPEZA AUTOMÁTICA DE MENSAGENS ANTIGAS ---
 def limpar_canal_telegram():
-    # Nota: No Telegram Bot API, para apagar mensagens em massa por data, 
-    # o bot precisa mapear os IDs das mensagens enviadas ou usar lógica de varredura.
     dias = CONFIG['auto_clean_days']
     if dias == "never":
         return
     print(f"🧹 Rotina de limpeza verificada: mensagens com mais de {dias} dias serão tratadas.")
-    # Aqui o robô gerencia o histórico e aplica o deleteMessage nas mensagens elegíveis.
 
 # --- LOOP PRINCIPAL DE AUTOMAÇÃO DO ROBÔ ---
 def loop_automacao():
     while True:
-        # Calcula o intervalo com base na escolha do usuário (Dia, Semana, Mês)
         qtd = CONFIG['post_quantity']
         periodo = CONFIG['post_period']
         
-        # Exemplo prático de espaçamento inteligente:
-        # Se for por dia e 10 produtos, espaça as postagens ao longo das 24 horas.
         if periodo == "day":
             intervalo_segundos = (24 * 3600) / max(qtd, 1)
         elif periodo == "week":
             intervalo_segundos = (7 * 24 * 3600) / max(qtd, 1)
-        else:  # Mês
+        else:
             intervalo_segundos = (30 * 24 * 3600) / max(qtd, 1)
 
         # Dispara a oferta
@@ -114,7 +108,7 @@ def loop_automacao():
         limpar_canal_telegram()
 
         # Aguarda o tempo calculado antes do próximo produto
-        time.sleep(min(max(intervalo_segundos, 60), 86400)) # Limite seguro de espera
+        time.sleep(min(max(intervalo_segundos, 60), 86400))
 
 if __name__ == '__main__':
     # Inicia a thread do Auto-Ping
