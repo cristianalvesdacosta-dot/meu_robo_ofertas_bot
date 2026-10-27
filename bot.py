@@ -1,122 +1,177 @@
 import os
 import time
-import threading
+import json
 import requests
-from flask import Flask, jsonify, request
+from datetime import datetime
+from threading import Thread
+import firebase_admin
+from firebase_admin import credentials, firestore
+from flask import Flask
 
+# Inicialização do Flask para manter o Render acordado
 app = Flask(__name__)
 
-# Configurações padrão lidas diretamente das variáveis de ambiente do Render
-CONFIG = {
-    "bot_token": os.environ.get("BOT_TOKEN", ""),
-    "channel_id": os.environ.get("CHANNEL_ID", ""),
-    "affiliate_link": os.environ.get("AFFILIATE_LINK", "https://s.shopee.com.br/"),
-    "post_quantity": int(os.environ.get("POST_QUANTITY", 10)),
-    "post_period": os.environ.get("POST_PERIOD", "day"),        # 'day', 'week'
-    "auto_clean_days": os.environ.get("AUTO_CLEAN_DAYS", "7"),  # Dias ou 'never'
-    "offer_validity": "⚡ Oferta Limitada - Válida por Tempo Limitado!"
-}
-
-# --- ROTA DO SERVIDOR FLASK (Anti-Sleep & Webhook) ---
-@app.route('/')
+@app.route("/")
 def home():
-    return "🤖 Robô de Afiliados Rodando com Sucesso!"
+    return "🤖 Robô Multimarcas Pro está rodando 100% automatizado!"
 
-@app.route('/update_config', methods=['POST'])
-def update_config():
-    data = request.json
-    if data:
-        # Se quiser atualizar dinamicamente via requisição externa
-        if 'botToken' in data: CONFIG['bot_token'] = data['botToken']
-        if 'channelId' in data: CONFIG['channel_id'] = data['channelId']
-        if 'affLink' in data: CONFIG['affiliate_link'] = data['affLink']
-        if 'postQuantity' in data: CONFIG['post_quantity'] = int(data['postQuantity'])
-        if 'postPeriod' in data: CONFIG['post_period'] = data['postPeriod']
-        if 'autoCleanInterval' in data: CONFIG['auto_clean_days'] = data['autoCleanInterval']
-        return jsonify({"status": "success", "message": "Configurações atualizadas com sucesso!"})
-    return jsonify({"status": "error", "message": "Dados inválidos"}), 400
+# Inicialização do Firebase
+if not firebase_admin._apps:
+    cred_json = os.environ.get("FIREBASE_CREDENTIALS_JSON")
+    if cred_json:
+        cred_dict = json.loads(cred_json)
+        cred = credentials.Certificate(cred_dict)
+        firebase_admin.initialize_app(cred)
+    else:
+        cred = credentials.Certificate("firebase_credentials.json")
+        firebase_admin.initialize_app(cred)
 
-# --- SISTEMA DE AUTO-PING (Para o Render nunca dormir) ---
-def self_ping():
-    render_url = os.environ.get("RENDER_EXTERNAL_URL")
-    if not render_url:
-        return
+db = firestore.client()
+
+def carregar_configuracoes_natura():
+    """Lê as configurações da Natura salvas no Firebase."""
+    try:
+        doc_ref = db.collection("configuracoes").doc("natura_settings")
+        doc = doc_ref.get()
+        if doc.exists:
+            return doc.to_dict()
+    except Exception as e:
+        print(f"Erro ao ler configurações da Natura: {e}")
+    return None
+
+def calcular_intervalo_segundos(frequencia, detalhe):
+    """Converte a frequência escolhida no painel em segundos."""
+    detalhe_lower = detalhe.lower() if detalhe else ""
+    try:
+        import re
+        nums = re.findall(r'\d+', detalhe_lower)
+        valor = int(nums[0]) if nums else 1
+    except:
+        valor = 1
+
+    if "minuto" in frequencia.lower() or "minuto" in detalhe_lower:
+        return max(60, valor * 60)
+    elif "hora" in frequencia.lower() or "hora" in detalhe_lower:
+        return max(300, valor * 3600)
+    elif "dia" in frequencia.lower():
+        return 86400
+    
+    return 60
+
+def enviar_telegram(token, channel_id, mensagem, foto_url=None):
+    """Envia a oferta formatada para o canal do Telegram."""
+    if foto_url:
+        url = f"https://api.telegram.org/bot{token}/sendPhoto"
+        payload = {
+            "chat_id": channel_id,
+            "photo": foto_url,
+            "caption": mensagem,
+            "parse_mode": "Markdown"
+        }
+    else:
+        url = f"https://api.telegram.org/bot{token}/sendMessage"
+        payload = {
+            "chat_id": channel_id,
+            "text": mensagem,
+            "parse_mode": "Markdown"
+        }
+    
+    try:
+        response = requests.post(url, json=payload, timeout=15)
+        return response.json()
+    except Exception as e:
+        print(f"Erro ao enviar para o Telegram: {e}")
+        return {"ok": False}
+
+def salvar_produto_na_loja(produto_data):
+    """Salva o produto na coleção 'products' da vitrine do GitHub Pages."""
+    try:
+        db.collection("products").add(produto_data)
+        print("✅ Produto sincronizado com sucesso na Loja Digital!")
+    except Exception as e:
+        print(f"❌ Erro ao salvar produto na loja: {e}")
+
+def loop_automatico_robô():
+    """Loop contínuo que roda em segundo plano de forma autônoma."""
+    print("🚀 Robô em segundo plano iniciado com sucesso!")
+    time.sleep(10) # Aguarda o sistema estabilizar
+    
     while True:
         try:
-            time.sleep(480)  # A cada 8 minutos
-            requests.get(render_url)
-            print("🔄 Auto-ping executado para manter o bot acordado.")
+            config = carregar_configuracoes_natura()
+            if not config:
+                print("⚠️ Configurações da Natura não encontradas. Aguardando...")
+                time.sleep(60)
+                continue
+
+            token = config.get("telegram_token")
+            channel_id = config.get("channel_id")
+            aff_link = config.get("affiliate_link", "https://www.minhaloja.natura.com/consultoria/ora_et_labora")
+            
+            freq = config.get("frequencia", "Por Minuto")
+            detalhe = config.get("detalhe_frequencia", "1 minuto")
+            intervalo_segundos = calcular_intervalo_segundos(freq, detalhe)
+            
+            print(f"🔄 Executando ciclo Natura... Próximo em {intervalo_segundos}s.")
+            
+            # Dados simulados do produto com o cálculo do cupom CLIENTEVIP (10% OFF)
+            nome_produto = "Deo Parfum Essencial Exclusivo Masculino 100ml"
+            preco_original = 180.00
+            desconto_percentual = 10
+            preco_com_desconto = preco_original - (preco_original * (desconto_percentual / 100))
+            cupom = "CLIENTEVIP"
+            categoria = "Perfumaria"
+            foto_url = "https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&w=800&q=80"
+            descricao_curta = "Fragrância marcante com notas amadeiradas e especiadas."
+            
+            # Mensagem detalhada para o Telegram
+            mensagem_telegram = (
+                f"🌸 *LANÇAMENTO / OFERTA NATURA*\n\n"
+                f"✨ *{nome_produto}*\n\n"
+                f"❌ De: R$ {preco_original:.2f}".replace('.', ',') + f"\n"
+                f"💰 *Por apenas: R$ {preco_com_desconto:.2f}* `(-{desconto_percentual}% OFF)`\n"
+                f"🏷️ *Cupom:* `{cupom}`\n\n"
+                f"📝 *Detalhes:* {descricao_curta}\n\n"
+                f"🔗 *Compre no meu Espaço Natura (com o cupom aplicado):*\n"
+                f"{aff_link}"
+            )
+
+            # Envia para o Telegram
+            res_tg = enviar_telegram(token, channel_id, mensagem_telegram, foto_url)
+            if res_tg.get("ok"):
+                print("✅ Oferta enviada para o Telegram com sucesso!")
+            
+            # Salva na Loja Digital (Firebase)
+            produto_para_loja = {
+                "name": nome_produto,
+                "category": categoria,
+                "isFeatured": True,
+                "image": foto_url,
+                "images": [foto_url],
+                "price": str(preco_original),
+                "discountPercent": str(desconto_percentual),
+                "description": f"✨ 10% de OFF garantido! Copie o cupom CLIENTEVIP e use em qualquer produto da loja.\n\n{descricao_curta}",
+                "link": aff_link,
+                "code": cupom,
+                "validityDays": 30,
+                "totalUses": 30,
+                "usedCount": 0,
+                "createdAt": datetime.utcnow().isoformat()
+            }
+            salvar_produto_na_loja(produto_para_loja)
+
+            time.sleep(intervalo_segundos)
+
         except Exception as e:
-            print(f"Erro no auto-ping: {e}")
+            print(f"❌ Erro no loop do robô: {e}")
+            time.sleep(60)
 
-# --- FUNÇÃO DE DISPARO DE OFERTAS NO TELEGRAM ---
-def enviar_oferta_telegram():
-    token = CONFIG['bot_token']
-    channel = CONFIG['channel_id']
+if __name__ == "__main__":
+    # Inicia o robô em uma Thread separada rodando em segundo plano
+    t = Thread(target=loop_automatico_robô)
+    t.daemon = True
+    t.start()
     
-    if not token or not channel:
-        print("⚠️ Token ou Canal do Telegram não configurados nas variáveis de ambiente.")
-        return
-
-    texto_mensagem = (
-        f"🔥 **SUPER OPORTUNIDADE DE HORA EM HORA!**\n\n"
-        f"Garanta este produto com desconto exclusivo.\n\n"
-        f"💬 *{CONFIG['offer_validity']}*\n\n"
-        f"👉 **Compre aqui:** {CONFIG['affiliate_link']}"
-    )
-
-    url = f"https://api.telegram.org/bot{token}/sendMessage"
-    payload = {
-        "chat_id": channel,
-        "text": texto_mensagem,
-        "parse_mode": "Markdown"
-    }
-
-    try:
-        response = requests.post(url, json=payload)
-        if response.status_code == 200:
-            print("✅ Oferta disparada com sucesso no canal!")
-        else:
-            print(f"❌ Erro ao enviar para o Telegram: {response.text}")
-    except Exception as e:
-        print(f"Erro de conexão com a API do Telegram: {e}")
-
-# --- FUNÇÃO DE LIMPEZA AUTOMÁTICA DE MENSAGENS ANTIGAS ---
-def limpar_canal_telegram():
-    dias = CONFIG['auto_clean_days']
-    if dias == "never":
-        return
-    print(f"🧹 Rotina de limpeza verificada: mensagens com mais de {dias} dias serão tratadas.")
-
-# --- LOOP PRINCIPAL DE AUTOMAÇÃO DO ROBÔ ---
-def loop_automacao():
-    while True:
-        qtd = CONFIG['post_quantity']
-        periodo = CONFIG['post_period']
-        
-        if periodo == "day":
-            intervalo_segundos = (24 * 3600) / max(qtd, 1)
-        elif periodo == "week":
-            intervalo_segundos = (7 * 24 * 3600) / max(qtd, 1)
-        else:
-            intervalo_segundos = (30 * 24 * 3600) / max(qtd, 1)
-
-        # Dispara a oferta
-        enviar_oferta_telegram()
-        
-        # Executa limpeza periódica
-        limpar_canal_telegram()
-
-        # Aguarda o tempo calculado antes do próximo produto
-        time.sleep(min(max(intervalo_segundos, 60), 86400))
-
-if __name__ == '__main__':
-    # Inicia a thread do Auto-Ping
-    threading.Thread(target=self_ping, daemon=True).start()
-    
-    # Inicia a thread do Robô de Automação de Ofertas
-    threading.Thread(target=loop_automacao, daemon=True).start()
-
     # Inicia o servidor Flask na porta exigida pelo Render
-    port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
