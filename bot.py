@@ -12,7 +12,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "Robô de Afiliados Oficial rodando 24h com anti-sleep e vitrine variada!"
+    return "Robô de Afiliados Oficial rodando 100% liso!"
 
 # Inicializa o Firebase
 if not firebase_admin._apps:
@@ -28,39 +28,35 @@ DOCUMENTO_CONFIG = f"{LOJA}_settings"
 print(f"🤖 Robô oficial iniciado para a loja: {LOJA.upper()}!")
 
 # ==========================================
-# 🎁 VITRINE DE PRODUTOS VARIADOS (COM FOTOS REAIS)
+# 🎁 CATÁLOGO DE PRODUTOS VARIADOS COM FOTOS
 # ==========================================
 CATALOGO_PRODUTOS = {
     "natura": [
         {
-            "foto": "https://http2.mlstatic.com/D_NQ_NP_895315-MLB70162590749_062023-O.webp",
-            "texto": "🌊 *Colônia Desodorante Kayak Masculino - 100ml*\n\nO clássico que traz a sensação de liberdade e energia pura. Perfeito para o dia a dia!\n\n💰 *Valor na Loja:* R$ 149,90\n🔥 *Com o seu Cupom (10% OFF):* R$ 134,91\n🏷️ *Cupom:* `{cupom}`\n\n👉 [Comprar na Minha Loja]({link})"
+            "foto": "https://img.natura.com.br/product/1000w/114563_1.jpg",
+            "texto": "🌊 *Colônia Desodorante Kayak Masculino - 100ml*\n\nO clássico que traz a sensação de liberdade e energia pura. Perfeito para o dia a dia!\n\n💰 *Valor na Loja:* R$ 149,90\n🔥 *Com o seu Cupom (10% OFF):* R$ 134,91\n🏷️ *Cupom Exclusivo:* `{cupom}`\n\n👉 [Comprar na Minha Loja]({link})"
         },
         {
-            "foto": "https://natura.digital/images/products/114563.jpg", # Exemplo de foto Natura
-            "texto": "🌸 *Desodorante Colônia Luna Tradicional - 75ml*\n\nChipré brasileiro que une o frescor das frutas cítricas com um toque floral marcante.\n\n💰 *Valor na Loja:* R$ 159,90\n🔥 *Com o seu Cupom (10% OFF):* R$ 143,91\n🏷️ *Cupom:* `{cupom}`\n\n👉 [Comprar na Minha Loja]({link})"
+            "foto": "https://img.natura.com.br/product/1000w/70123_1.jpg",
+            "texto": "🌸 *Desodorante Colônia Luna Tradicional - 75ml*\n\nChipré brasileiro que une o frescor das frutas cítricas com um toque floral marcante.\n\n💰 *Valor na Loja:* R$ 159,90\n🔥 *Com o seu Cupom (10% OFF):* R$ 143,91\n🏷️ *Cupom Exclusivo:* `{cupom}`\n\n👉 [Comprar na Minha Loja]({link})"
         },
         {
-            "foto": "https://natura.digital/images/products/70123.jpg",
-            "texto": "💧 *Creme Desodorante Nutritivo Tododia Baunilha e Macadâmia - 400ml*\n\nNutrição profunda com toque aveludado e perfume que dura o dia todo.\n\n💰 *Valor na Loja:* R$ 69,90\n🔥 *Com o seu Cupom (10% OFF):* R$ 62,91\n🏷️ *Cupom:* `{cupom}`\n\n👉 [Comprar na Minha Loja]({link})"
-        },
-        {
-            "foto": "https://natura.digital/images/products/85412.jpg",
-            "texto": "🌿 *Polpa Hidratante para Pés Ekos Castanha - 75g*\n\nRestaura a pele e hidrata profundamente as cutículas com óleo bruto de castanha.\n\n💰 *Valor na Loja:* R$ 52,90\n🔥 *Com o seu Cupom (10% OFF):* R$ 47,61\n🏷️ *Cupom:* `{cupom}`\n\n👉 [Comprar na Minha Loja]({link})"
+            "foto": "https://img.natura.com.br/product/1000w/85412_1.jpg",
+            "texto": "💧 *Creme Desodorante Nutritivo Tododia Baunilha e Macadâmia - 400ml*\n\nNutrição profunda com toque aveludado e perfume que dura o dia todo.\n\n💰 *Valor na Loja:* R$ 69,90\n🔥 *Com o seu Cupom (10% OFF):* R$ 62,91\n🏷️ *Cupom Exclusivo:* `{cupom}`\n\n👉 [Comprar na Minha Loja]({link})"
         }
     ],
     "shopee": [
         {
-            "foto": "https://cf.shopee.com.br/file/br-11134207-7r98o-m123456789",
+            "foto": "https://cf.shopee.com.br/file/sg-11134201-7rdvn-m180v362i02c7b",
             "texto": "🔥 *Fone de Ouvido Bluetooth TWS Sem Fio*\n\nExcelente qualidade de som, bateria duradoura e preço de fábrica com frete grátis!\n\n💰 *Preço Especial:* R$ 49,90\n🏷️ *Utilize seu cupom na finalização!*\n\n👉 [Aproveitar Oferta na Shopee]({link})"
         },
         {
-            "foto": "https://cf.shopee.com.br/file/br-11134207-7r98o-m987654321",
-            "texto": "⚡ *Suporte Veicular Magnético para Celular*\n\nPraticidade e segurança para o seu dia a dia no trânsito. Instalação super rápida!\n\n💰 *Preço Especial:* R$ 24,90\n\n👉 [Aproveitar Oferta na Shopee]({link})"
+            "foto": "https://cf.shopee.com.br/file/br-11134207-7r98o-m123456789",
+            "texto": "⚡ *Suporte Veicular Magnético para Celular*\n\nPraticidade e segurança para o seu dia a dia no trânsito. Super rápido!\n\n💰 *Preço Especial:* R$ 24,90\n\n👉 [Aproveitar Oferta na Shopee]({link})"
         },
         {
-            "foto": "https://cf.shopee.com.br/file/br-11134207-7r98o-m555555555",
-            "texto": "🎒 *Mochila Impermeável Executiva / Viagem*\n\nCom compartimento para notebook e entrada USB integrada. Resistente e estilosa!\n\n💰 *Preço Especial:* R$ 89,90\n\n👉 [Aproveitar Oferta na Shopee]({link})"
+            "foto": "https://cf.shopee.com.br/file/br-11134207-7r98o-m987654321",
+            "texto": "🎒 *Mochila Impermeável Executiva / Viagem*\n\nCom compartimento para notebook e entrada USB integrada.\n\n💰 *Preço Especial:* R$ 89,90\n\n👉 [Aproveitar Oferta na Shopee]({link})"
         }
     ],
     "picpay": [
@@ -76,53 +72,41 @@ def enviar_mensagem_telegram(token, channel_id, produto):
     foto_url = produto.get("foto")
     legenda = produto.get("texto")
     
-    # Se tiver foto, envia como sendPhoto (aparece a miniatura rica)
-    if foto_url:
-        url = f"https://api.telegram.org/bot{token}/sendPhoto"
-        payload = {
-            "chat_id": channel_id,
-            "photo": foto_url,
-            "caption": legenda,
-            "parse_mode": "Markdown"
-        }
-    else:
-        # Fallback caso não tenha foto
-        url = f"https://api.telegram.org/bot{token}/sendMessage"
-        payload = {
-            "chat_id": channel_id,
-            "text": legenda,
-            "parse_mode": "Markdown"
-        }
-
+    url = f"https://api.telegram.org/bot{token}/sendPhoto"
+    payload = {
+        "chat_id": channel_id,
+        "photo": foto_url,
+        "caption": legenda,
+        "parse_mode": "Markdown"
+    }
+    
     try:
         response = requests.post(url, json=payload)
         if response.status_code == 200:
-            print("✅ Oferta com foto enviada com sucesso para o Telegram!")
+            print("✅ Oferta enviada com sucesso para o Telegram!")
         else:
-            print(f"❌ Erro ao enviar para o Telegram: {response.text}")
+            # Fallback de segurança caso dê erro na foto: envia texto puro
+            print(f"⚠️ Erro na foto, enviando texto alternativo: {response.text}")
+            url_txt = f"https://api.telegram.org/bot{token}/sendMessage"
+            requests.post(url_txt, json={"chat_id": channel_id, "text": legenda, "parse_mode": "Markdown"})
     except Exception as e:
         print(f"⚠️ Erro de conexão com o Telegram: {e}")
 
 # ==========================================
-# ⚡ FUNÇÃO ANTI-SLEEP (O "PING" A CADA 8 MINUTOS)
+# ⚡ FUNÇÃO ANTI-SLEEP (Mantém o Render acordado)
 # ==========================================
 def manter_ativo():
-    """Faz uma requisição para o próprio app a cada 8 minutos para evitar que o Render durma."""
-    url_app = os.getenv("RENDER_EXTERNAL_URL")
-    if not url_app:
-        # URL genérica caso a variável de ambiente não esteja injetada
-        url_app = "https://seu-app.onrender.com"
-    
+    url_app = os.getenv("RENDER_EXTERNAL_URL", "https://seu-app.onrender.com")
     while True:
         try:
-            time.sleep(480) # 8 minutos (480 segundos)
+            time.sleep(480) # 8 minutos
             requests.get(url_app)
-            print("🔄 [Anti-Sleep] Ping enviado com sucesso para manter o robô acordado!")
+            print("🔄 [Anti-Sleep] Ping enviado com sucesso!")
         except Exception as e:
             print(f"⚠️ [Anti-Sleep] Erro no ping: {e}")
 
 # ==========================================
-# 🔄 LOOP PRINCIPAL DE DISPAROS
+# 🔄 LOOP DE DISPAROS (Base Estável)
 # ==========================================
 def loop_disparos():
     while True:
@@ -140,18 +124,16 @@ def loop_disparos():
                 cupom = config.get("cupom", "CLIENTEVIP")
 
                 if status == "pausado":
-                    print(f"⏸️ Robô [{DOCUMENTO_CONFIG}] está PAUSADO pelo painel.")
+                    print(f"⏸️ Robô [{DOCUMENTO_CONFIG}] está PAUSADO.")
                 else:
-                    print(f"🔄 Executando ciclo para [{DOCUMENTO_CONFIG}]...")
+                    print(f"🔄 Executando envio para [{DOCUMENTO_CONFIG}]...")
                     if token and channel_id and affiliate_link:
                         
-                        # Pega a lista da loja correspondente
+                        # Pega a lista da loja correspondente e escolhe um produto diferente a cada ciclo
                         lista_produtos = CATALOGO_PRODUTOS.get(LOJA, CATALOGO_PRODUTOS["shopee"])
-                        
-                        # Sorteia um produto aleatório da lista para NUNCA repetir igual seguidamente
                         produto_sorteado = random.choice(lista_produtos).copy()
                         
-                        # Substitui as tags {link} e {cupom} dinamicamente
+                        # Insere o link e o cupom no texto
                         produto_sorteado["texto"] = produto_sorteado["texto"].format(
                             link=affiliate_link, 
                             cupom=cupom
@@ -164,12 +146,12 @@ def loop_disparos():
                 print(f"❌ Documento '{DOCUMENTO_CONFIG}' não encontrado.")
 
         except Exception as e:
-            print(f"⚠️ Erro no ciclo de disparo: {e}")
+            print(f"⚠️ Erro no loop: {e}")
 
-        # ⏱️ Intervalo entre os disparos (60 segundos para teste; depois mude para 3600 = 1 hora se preferir)
+        # ⏱️ Intervalo de 60 segundos entre os disparos
         time.sleep(60)
 
-# Inicia as Threads em segundo plano (O robô de disparos + O Anti-Sleep)
+# Inicia as rotinas em segundo plano
 t_disparos = threading.Thread(target=loop_disparos)
 t_disparos.daemon = True
 t_disparos.start()
