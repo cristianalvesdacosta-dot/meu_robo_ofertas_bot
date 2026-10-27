@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Avançado - Robô Shopee & Telegram</title>
+    <title>Painel Multimarcas - Robô Pro</title>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -36,22 +36,31 @@
 <body>
 
     <div class="container">
-        <h2>Painel do Robô - Ofertas Shopee</h2>
+        <h2>Painel Multimarcas - Robô Pro</h2>
         
-        <div class="section-title">🔑 Conexão Telegram & Shopee</div>
+        <div class="section-title">🎯 Seleção da Plataforma</div>
         <div class="form-group">
-            <label for="bot-token">Token do Bot do Telegram</label>
+            <label for="plataforma">Escolha qual canal/plataforma deseja configurar agora:</label>
+            <select id="plataforma" onchange="alternarPlataforma()">
+                <option value="shopee">Shopee (Canal da Shopee)</option>
+                <option value="natura" selected>Natura (Canal da Natura)</option>
+            </select>
+        </div>
+
+        <div class="section-title">🔑 Conexão Telegram & Link</div>
+        <div class="form-group">
+            <label for="bot-token">Token do Bot do Telegram (Mesmo Bot para os 2)</label>
             <input type="text" id="bot-token" value="8616829338:AAHHLoPRw5uvx4c01bkRI">
         </div>
 
         <div class="form-group">
-            <label for="channel-id">ID do Canal</label>
-            <input type="text" id="channel-id" value="@cristian_ofertas_bot_pro">
+            <label id="label-channel-id" for="channel-id">ID do Canal da Natura</label>
+            <input type="text" id="channel-id" value="@cristian_ofertas_natura">
         </div>
 
         <div class="form-group">
-            <label for="aff-link">Seu Link de Afiliado Shopee (Fixo para todas as ofertas)</label>
-            <input type="text" id="aff-link" value="https://s.shopee.com.br/6VOwp1jg5L">
+            <label id="label-aff-link" for="aff-link">Seu Link da Natura (Consultoria)</label>
+            <input type="text" id="aff-link" value="https://www.minhaloja.natura.com/consultoria/ora_et_labora">
         </div>
 
         <div class="section-title">📅 Dias de Funcionamento Automático</div>
@@ -72,13 +81,13 @@
         <div class="row">
             <div class="form-group">
                 <label for="qtd">Quantidade por Ciclo</label>
-                <input type="text" id="qtd" value="5" placeholder="Ex: 5 ou Infinito">
+                <input type="text" id="qtd" value="5" placeholder="Ex: 5">
             </div>
             <div class="form-group">
                 <label for="freq">Base de Frequência</label>
                 <select id="freq" onchange="atualizarOpcoesFrequencia()">
-                    <option value="Por Minuto">Por Minuto (Intervalo Curto)</option>
-                    <option value="Por Hora" selected>Por Hora (Intervalo)</option>
+                    <option value="Por Minuto" selected>Por Minuto (Intervalo Curto)</option>
+                    <option value="Por Hora">Por Hora (Intervalo)</option>
                     <option value="Por Dia">Por Dia (Volume Diário)</option>
                     <option value="Por Mes">Por Mês (Distribuição Mensal)</option>
                 </select>
@@ -86,8 +95,8 @@
         </div>
 
         <div class="form-group" id="grupo-detalhe-freq">
-            <label id="label-detalhe-freq" for="detalhe-freq">Intervalo (Ex: 1 hora, 5 minutos, 30 minutos)</label>
-            <input type="text" id="detalhe-freq" value="1 hora" placeholder="Ex: 5 minutos ou 1 hora">
+            <label id="label-detalhe-freq" for="detalhe-freq">Intervalo (Ex: 1 minuto, 5 minutos)</label>
+            <input type="text" id="detalhe-freq" value="1 minuto" placeholder="Ex: 1 minuto">
         </div>
 
         <div class="section-title">🧹 Limpeza Automática do Canal</div>
@@ -102,8 +111,8 @@
         </div>
 
         <!-- Botões de Ação -->
-        <button class="btn btn-save" onclick="salvarConfiguracoes()">💾 Salvar na Nuvem</button>
-        <button class="btn btn-test" onclick="enviarTesteTelegram()">🚀 Testar Envio Imediato</button>
+        <button class="btn btn-save" onclick="salvarConfiguracoes()">💾 Salvar Configuração Desta Loja</button>
+        <button class="btn btn-test" onclick="enviarTesteTelegram()">🚀 Testar Envio no Canal Selecionado</button>
         <button class="btn btn-logout" onclick="sairDaConta()">Sair da Conta</button>
 
         <div id="status-msg"></div>
@@ -127,14 +136,34 @@
         const db = firebase.firestore();
         const auth = firebase.auth();
 
+        function alternarPlataforma() {
+            const plat = document.getElementById('plataforma').value;
+            const inputLink = document.getElementById('aff-link');
+            const labelLink = document.getElementById('label-aff-link');
+            const inputChannel = document.getElementById('channel-id');
+            const labelChannel = document.getElementById('label-channel-id');
+
+            if (plat === 'shopee') {
+                labelChannel.innerText = "ID do Canal da Shopee";
+                inputChannel.value = "@cristian_ofertas_bot_pro";
+                labelLink.innerText = "Seu Link de Afiliado Shopee";
+                inputLink.value = "https://s.shopee.com.br/6VOwp1jg5L";
+            } else if (plat === 'natura') {
+                labelChannel.innerText = "ID do Canal da Natura";
+                inputChannel.value = "@cristian_ofertas_natura"; // Substitua pelo nome do seu canal da Natura
+                labelLink.innerText = "Seu Link de Consultoria Natura";
+                inputLink.value = "https://www.minhaloja.natura.com/consultoria/ora_et_labora";
+            }
+        }
+
         function atualizarOpcoesFrequencia() {
             const freq = document.getElementById('freq').value;
             const label = document.getElementById('label-detalhe-freq');
             const input = document.getElementById('detalhe-freq');
 
             if (freq === 'Por Minuto') {
-                label.innerText = "Intervalo em Minutos (Ex: 5 minutos, 30 minutos)";
-                input.value = "5 minutos";
+                label.innerText = "Intervalo em Minutos (Ex: 1 minuto, 5 minutos)";
+                input.value = "1 minuto";
             } else if (freq === 'Por Hora') {
                 label.innerText = "Intervalo em Horas (Ex: 1 hora, 2 horas)";
                 input.value = "1 hora";
@@ -150,6 +179,7 @@
         function salvarConfiguracoes() {
             const token = document.getElementById('bot-token').value.trim();
             const channel = document.getElementById('channel-id').value.trim();
+            const plataforma = document.getElementById('plataforma').value;
             const affLink = document.getElementById('aff-link').value.trim();
             const qtd = document.getElementById('qtd').value.trim();
             const freq = document.getElementById('freq').value;
@@ -165,9 +195,13 @@
             msgDiv.style.display = "block";
             msgDiv.style.backgroundColor = "#334155";
             msgDiv.style.color = "#38bdf8";
-            msgDiv.innerText = "Salvando configurações na nuvem...";
+            msgDiv.innerText = `Salvando configurações da ${plataforma.toUpperCase()} na nuvem...`;
 
-            db.collection("configuracoes").doc("bot_settings").set({
+            // Salva em documentos separados: 'shopee_settings' ou 'natura_settings'
+            const docName = plataforma === 'shopee' ? 'shopee_settings' : 'natura_settings';
+
+            db.collection("configuracoes").doc(docName).set({
+                plataforma: plataforma,
                 telegram_token: token,
                 channel_id: channel,
                 affiliate_link: affLink,
@@ -181,7 +215,7 @@
             .then(() => {
                 msgDiv.style.backgroundColor = "rgba(16, 185, 129, 0.2)";
                 msgDiv.style.color = "#10b981";
-                msgDiv.innerText = "✅ Configurações salvas com sucesso no Firebase!";
+                msgDiv.innerText = `✅ Configurações da ${plataforma.toUpperCase()} salvas com sucesso!`;
             })
             .catch((error) => {
                 msgDiv.style.backgroundColor = "rgba(239, 68, 68, 0.2)";
@@ -193,6 +227,7 @@
         function enviarTesteTelegram() {
             const token = document.getElementById('bot-token').value.trim();
             const channel = document.getElementById('channel-id').value.trim();
+            const plataforma = document.getElementById('plataforma').value;
             const affLink = document.getElementById('aff-link').value.trim();
             const msgDiv = document.getElementById('status-msg');
 
@@ -207,17 +242,13 @@
             msgDiv.style.display = "block";
             msgDiv.style.backgroundColor = "#334155";
             msgDiv.style.color = "#38bdf8";
-            msgDiv.innerText = "A enviar oferta de teste...";
+            msgDiv.innerText = `Enviando teste para ${channel}...`;
 
-            const textoTeste = "🔥 *ACHADO EXCLUSIVO - 50% OFF!*\n\n" +
-                               "📱 *Produto de Demonstração Automática*\n" +
-                               "💰 De R$ 200,00 por apenas *R$ 99,00*\n\n" +
-                               "🔗 *Compre com desconto aqui:*\n" + (affLink || "https://s.shopee.com.br/6VOwp1jg5L") + "\n\n" +
-                               "⚡ _O robô vai varrer e enviar ofertas assim automaticamente!_";
-            
-            const url = `https://api.telegram.org/bot${token}/sendMessage`;
+            const textoTeste = plataforma === 'shopee' ?
+                `🔥 *OFERTA EXCLUSIVA SHOPEE*\n\n📱 *Produto de Demonstração*\n💰 De R$ 199,00 por *R$ 89,00*\n\n🔗 *Compre aqui:*\n${affLink}` :
+                `🌸 *LANCAMENTO NATURA*\n\n✨ *Perfume Kaiak / Essencial*\n💰 Oferta de Consultoria Exclusiva!\n\n🔗 *Compre no meu Espaço Natura:*\n${affLink}`;
 
-            fetch(url, {
+            fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -226,29 +257,27 @@
                     parse_mode: 'Markdown'
                 })
             })
-            .then(response => response.json())
+            .then(res => res.json())
             .then(data => {
                 if (data.ok) {
                     msgDiv.style.backgroundColor = "rgba(16, 185, 129, 0.2)";
                     msgDiv.style.color = "#10b981";
-                    msgDiv.innerText = "✅ Mensagem de teste enviada com sucesso!";
+                    msgDiv.innerText = `✅ Teste enviado com sucesso para ${channel}!`;
                 } else {
                     msgDiv.style.backgroundColor = "rgba(239, 68, 68, 0.2)";
                     msgDiv.style.color = "#ef4444";
                     msgDiv.innerText = "❌ Erro do Telegram: " + data.description;
                 }
             })
-            .catch(error => {
+            .catch(err => {
                 msgDiv.style.backgroundColor = "rgba(239, 68, 68, 0.2)";
                 msgDiv.style.color = "#ef4444";
-                msgDiv.innerText = "❌ Erro de rede: " + error.message;
+                msgDiv.innerText = "❌ Erro de conexão: " + err.message;
             });
         }
 
         function sairDaConta() {
-            auth.signOut().then(() => {
-                window.location.href = "login.html";
-            });
+            auth.signOut().then(() => { window.location.href = "login.html"; });
         }
     </script>
 </body>
