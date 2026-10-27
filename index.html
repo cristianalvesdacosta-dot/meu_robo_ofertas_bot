@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel - Bot Shopee & Telegram</title>
+    <title>Painel Avançado - Robô Shopee & Telegram</title>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -11,7 +11,7 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #0f172a; color: #f8fafc; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .container { background-color: #1e293b; padding: 30px; border-radius: 12px; width: 100%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .container { background-color: #1e293b; padding: 30px; border-radius: 12px; width: 100%; max-width: 550px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
         h2 { text-align: center; margin-bottom: 20px; color: #38bdf8; font-size: 1.5rem; }
         .section-title { font-size: 0.9rem; color: #94a3b8; margin: 20px 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #334155; padding-bottom: 5px; }
         .form-group { margin-bottom: 15px; }
@@ -20,6 +20,9 @@
         input:focus, select:focus { border-color: #38bdf8; outline: none; }
         .row { display: flex; gap: 10px; }
         .row .form-group { flex: 1; }
+        .days-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
+        .day-checkbox { display: flex; align-items: center; gap: 5px; font-size: 0.8rem; background: #0f172a; padding: 6px 10px; border-radius: 4px; border: 1px solid #334155; cursor: pointer; }
+        .day-checkbox input { width: auto; cursor: pointer; }
         .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1rem; transition: background 0.2s; margin-top: 10px; }
         .btn-save { background-color: #10b981; color: white; }
         .btn-save:hover { background-color: #059669; }
@@ -33,38 +36,57 @@
 <body>
 
     <div class="container">
-        <h2>Painel do Robô</h2>
+        <h2>Painel do Robô - Ofertas Shopee</h2>
         
         <div class="section-title">🔑 Conexão Telegram & Shopee</div>
-        
         <div class="form-group">
             <label for="bot-token">Token do Bot do Telegram</label>
-            <input type="text" id="bot-token" placeholder="Ex: 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ">
+            <input type="text" id="bot-token" value="8616829338:AAHHLoPRw5uvx4c01bkRI">
         </div>
 
         <div class="form-group">
-            <label for="channel-id">ID do Canal (ex: @seu_canal)</label>
-            <input type="text" id="channel-id" placeholder="Ex: @cristian_ofertas_bot_pro">
+            <label for="channel-id">ID do Canal</label>
+            <input type="text" id="channel-id" value="@cristian_ofertas_bot_pro">
         </div>
 
         <div class="form-group">
             <label for="aff-link">Seu Link de Afiliado Shopee</label>
-            <input type="text" id="aff-link" placeholder="Ex: https://s.shopee.com.br/...">
+            <input type="text" id="aff-link" value="https://s.shopee.com.br/6VOwp1jg5L">
         </div>
 
-        <div class="section-title">📦 Volume de Postagens</div>
+        <div class="section-title">📅 Dias de Funcionamento</div>
+        <div class="form-group">
+            <label>Selecione os dias em que o robô deve enviar ofertas:</label>
+            <div class="days-container">
+                <label class="day-checkbox"><input type="checkbox" name="dia" value="Seg" checked> Seg</label>
+                <label class="day-checkbox"><input type="checkbox" name="dia" value="Ter" checked> Ter</label>
+                <label class="day-checkbox"><input type="checkbox" name="dia" value="Qua" checked> Qua</label>
+                <label class="day-checkbox"><input type="checkbox" name="dia" value="Qui" checked> Qui</label>
+                <label class="day-checkbox"><input type="checkbox" name="dia" value="Sex" checked> Sex</label>
+                <label class="day-checkbox"><input type="checkbox" name="dia" value="Sab" checked> Sáb</label>
+                <label class="day-checkbox"><input type="checkbox" name="dia" value="Dom" checked> Dom</label>
+            </div>
+        </div>
+
+        <div class="section-title">📦 Volume & Frequência de Postagens</div>
         <div class="row">
             <div class="form-group">
-                <label for="qtd">Quantidade</label>
-                <input type="number" id="qtd" value="10">
+                <label for="qtd">Quantidade / Limite</label>
+                <input type="text" id="qtd" value="50" placeholder="Ex: 50 ou 'Infinito'">
             </div>
             <div class="form-group">
-                <label for="freq">Frequência</label>
-                <select id="freq">
-                    <option value="Por Dia">Por Dia</option>
-                    <option value="Por Hora">Por Hora</option>
+                <label for="freq">Base de Frequência</label>
+                <select id="freq" onchange="atualizarOpcoesFrequencia()">
+                    <option value="Por Hora">Por Hora (Intervalo)</option>
+                    <option value="Por Dia">Por Dia (Volume Diário)</option>
+                    <option value="Por Mes">Por Mês (Distribuição Mensal)</option>
                 </select>
             </div>
+        </div>
+
+        <div class="form-group" id="grupo-detalhe-freq">
+            <label id="label-detalhe-freq" for="detalhe-freq">Intervalo (De quantas em quantas horas?)</label>
+            <input type="text" id="detalhe-freq" value="1 hora" placeholder="Ex: A cada 1 hora">
         </div>
 
         <div class="section-title">🧹 Limpeza Automática do Canal</div>
@@ -87,9 +109,9 @@
     </div>
 
     <script>
-        // Configuração Firebase (Mantenha as suas credenciais originais se já estiverem integradas)
+        // Configuração Firebase
         const firebaseConfig = {
-            // Suas chaves do Firebase aqui
+            // Suas credenciais do Firebase
         };
 
         if (!firebase.apps.length) {
@@ -98,14 +120,36 @@
         const db = firebase.firestore();
         const auth = firebase.auth();
 
-        // Salvar configurações no Firestore
+        function atualizarOpcoesFrequencia() {
+            const freq = document.getElementById('freq').value;
+            const label = document.getElementById('label-detalhe-freq');
+            const input = document.getElementById('detalhe-freq');
+
+            if (freq === 'Por Hora') {
+                label.innerText = "Intervalo (Ex: A cada 1 hora, a cada 2 horas)";
+                input.value = "1 hora";
+            } else if (freq === 'Por Dia') {
+                label.innerText = "Volume ou Intervalo Diário (Ex: 10 por dia)";
+                input.value = "10 por dia";
+            } else if (freq === 'Por Mes') {
+                label.innerText = "Meta Mensal (Ex: 50 produtos no mês)";
+                input.value = "50 produtos";
+            }
+        }
+
         function salvarConfiguracoes() {
             const token = document.getElementById('bot-token').value.trim();
             const channel = document.getElementById('channel-id').value.trim();
             const affLink = document.getElementById('aff-link').value.trim();
-            const qtd = document.getElementById('qtd').value;
+            const qtd = document.getElementById('qtd').value.trim();
             const freq = document.getElementById('freq').value;
+            const detalheFreq = document.getElementById('detalhe-freq').value.trim();
             const cleanup = document.getElementById('cleanup').value;
+
+            const diasSelecionados = [];
+            document.querySelectorAll('input[name="dia"]:checked').forEach(el => {
+                diasSelecionados.push(el.value);
+            });
 
             const msgDiv = document.getElementById('status-msg');
 
@@ -115,12 +159,14 @@
                 affiliate_link: affLink,
                 quantidade: qtd,
                 frequencia: freq,
+                detalhe_frequencia: detalheFreq,
+                dias_semana: diasSelecionados,
                 limpeza: cleanup,
                 atualizado_em: new Date()
             })
             .then(() => {
                 msgDiv.style.color = "#10b981";
-                msgDiv.innerText = "Configurações salvas com sucesso na nuvem!";
+                msgDiv.innerText = "Configurações e regras salvas com sucesso na nuvem!";
             })
             .catch((error) => {
                 msgDiv.style.color = "#ef4444";
@@ -128,10 +174,10 @@
             });
         }
 
-        // Função do Botão de Teste Direto
         function enviarTesteTelegram() {
             const token = document.getElementById('bot-token').value.trim();
             const channel = document.getElementById('channel-id').value.trim();
+            const affLink = document.getElementById('aff-link').value.trim();
             const msgDiv = document.getElementById('status-msg');
 
             if (!token || !channel) {
@@ -141,9 +187,14 @@
             }
 
             msgDiv.style.color = "#38bdf8";
-            msgDiv.innerText = "A enviar mensagem de teste...";
+            msgDiv.innerText = "A enviar oferta de teste...";
 
-            const textoTeste = "🚀 *Teste de Conexão Bem-Sucedido!*\n\nO seu bot `ofertas_shopee_ml_bot` já está a comunicar perfeitamente com o canal `@cristian_ofertas_bot_pro`!";
+            const textoTeste = "🔥 *ACHADO EXCLUSIVO - 50% OFF!*\n\n" +
+                               "📱 *Smartphone Super Econômico*\n" +
+                               "💰 De R$ 1.200,00 por apenas *R$ 599,00*\n\n" +
+                               "🔗 *Compre com desconto aqui:*\n" + (affLink || "https://s.shopee.com.br/6VOwp1jg5L") + "\n\n" +
+                               "⚡ _Oferta verificada e com preço imperdível!_";
+            
             const url = `https://api.telegram.org/bot${token}/sendMessage`;
 
             fetch(url, {
@@ -159,7 +210,7 @@
             .then(data => {
                 if (data.ok) {
                     msgDiv.style.color = "#10b981";
-                    msgDiv.innerText = "✅ Mensagem de teste enviada com sucesso para o Telegram!";
+                    msgDiv.innerText = "✅ Oferta de teste enviada com sucesso para o Telegram!";
                 } else {
                     msgDiv.style.color = "#ef4444";
                     msgDiv.innerText = "❌ Erro do Telegram: " + data.description;
@@ -173,7 +224,7 @@
 
         function sairDaConta() {
             auth.signOut().then(() => {
-                window.location.href = "login.html"; // ou a tela de login que utilize
+                window.location.href = "login.html";
             });
         }
     </script>
