@@ -1,8 +1,17 @@
 import os
 import time
+import threading
 import requests
+from flask import Flask
 import firebase_admin
 from firebase_admin import credentials, firestore
+
+# Inicializa o Flask para o Render detectar a porta aberta e ficar feliz
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Robô de Afiliados Rodando 100% Ativo!"
 
 # Inicializa o Firebase
 if not firebase_admin._apps:
@@ -14,7 +23,7 @@ db = firestore.client()
 LOJA = os.getenv("LOJA", "shopee").lower()
 DOCUMENTO_CONFIG = f"{LOJA}_settings"
 
-print(f"🤖 Robô definitivo iniciado para a loja: {LOJA.upper()}!")
+print(f"🤖 Robô híbrido definitivo iniciado para a loja: {LOJA.upper()}!")
 
 # ==========================================
 # 🎁 CATÁLOGO OFICIAL COM FOTOS REAIS
@@ -78,13 +87,15 @@ def enviar_mensagem_telegram(token, channel_id, produto):
     except Exception as e:
         print(f"⚠️ Erro de conexão: {e}")
 
-def iniciar_robo():
+# Loop automático rodando em background
+def loop_disparos():
     indice_atual = 0
-    print("🚀 Loop principal ativado! Começando os disparos...")
+    print("🚀 Loop de disparos automáticos iniciado em background!")
+    time.sleep(5)
     
     while True:
         try:
-            print(f"🔍 Lendo Firebase para '{DOCUMENTO_CONFIG}'...")
+            print(f"🔍 [Loop] Lendo Firebase para '{DOCUMENTO_CONFIG}'...")
             doc_ref = db.collection("configuracoes").document(DOCUMENTO_CONFIG)
             doc = doc_ref.get()
 
@@ -95,7 +106,6 @@ def iniciar_robo():
                 affiliate_link = config.get("affiliate_link")
                 cupom = config.get("cupom") or "CLIENTEVIP"
 
-                # Verifica se os dados vitais existem
                 if token and channel_id and affiliate_link:
                     lista_produtos = CATALOGO_PRODUTOS.get(LOJA, CATALOGO_PRODUTOS["shopee"])
                     
@@ -107,18 +117,24 @@ def iniciar_robo():
                         cupom=cupom
                     )
 
-                    print(f"📤 Disparando produto {indice_atual} para o canal {channel_id}...")
+                    print(f"📤 [Loop] Disparando produto índice {indice_atual} para {channel_id}...")
                     enviar_mensagem_telegram(token, channel_id, produto_selecionado)
                 else:
-                    print("⚠️ Faltam dados essenciais no Firebase (token, canal ou link).")
+                    print("⚠️ [Loop] Faltam campos essenciais no Firebase.")
             else:
-                print(f"❌ Documento '{DOCUMENTO_CONFIG}' não encontrado no Firebase.")
+                print(f"❌ [Loop] Documento '{DOCUMENTO_CONFIG}' não encontrado no Firebase.")
 
         except Exception as e:
-            print(f"⚠️ Erro no ciclo do robô: {e}")
+            print(f"⚠️ [Loop] Erro no ciclo: {e}")
 
-        # Pausa de 60 segundos exatos antes do próximo envio automático
+        # Aguarda 60 segundos exatos
         time.sleep(60)
 
+# Inicia a thread do robô
+t = threading.Thread(target=loop_disparos)
+t.daemon = True
+t.start()
+
 if __name__ == "__main__":
-    iniciar_robo()
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
