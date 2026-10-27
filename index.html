@@ -13,7 +13,6 @@
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // Configuração oficial do teu projeto Firebase
         const firebaseConfig = {
           apiKey: "AIzaSyB4N7gvqdgIQMxM7Ft5jYMYfno1nox13cw",
           authDomain: "robo-afiliados-pro.firebaseapp.com",
@@ -28,7 +27,6 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Expor funções globalmente para o HTML utilizar
         window.firebaseAuth = auth;
         window.firebaseDb = db;
         window.signInWithEmailAndPassword = signInWithEmailAndPassword;
@@ -38,7 +36,6 @@
         window.setDoc = setDoc;
         window.getDoc = getDoc;
 
-        // Observar estado de autenticação (Mantém o utilizador logado)
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 document.getElementById('userGreeting').innerText = "Painel: " + user.email;
@@ -90,26 +87,6 @@
             padding-bottom: 4px;
             font-weight: 700;
         }
-
-        .days-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 6px;
-            margin-bottom: 14px;
-        }
-        .day-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 12px;
-            background: var(--bg-input);
-            padding: 8px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            cursor: pointer;
-            color: var(--text-main);
-        }
-        .day-item input { width: auto; cursor: pointer; }
 
         .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
@@ -229,17 +206,17 @@
 
             <div class="form-group">
                 <label><i class="ph ph-telegram-logo" style="color: #38bdf8;"></i> Token do Bot do Telegram</label>
-                <input type="text" id="botToken" placeholder="Ex: 8616829338:AAHHLfo...">
+                <input type="text" id="botToken" value="8616829338:AAHHLoPRw5uvx4c01bkRI">
             </div>
 
             <div class="form-group">
                 <label><i class="ph ph-chat-centered-text"></i> ID do Canal (ex: @seu_canal)</label>
-                <input type="text" id="channelId" placeholder="@meu_canal_ofertas">
+                <input type="text" id="channelId" value="@cristian_ofertas_bot_pro">
             </div>
 
             <div class="form-group">
                 <label><i class="ph ph-link"></i> Seu Link de Afiliado Shopee</label>
-                <input type="text" id="affLink" placeholder="https://s.shopee.com.br/...">
+                <input type="text" id="affLink" value="https://s.shopee.com.br/6VOwp1jg5L">
             </div>
 
             <div class="section-divider">📦 Volume de Postagens</div>
