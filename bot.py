@@ -15,21 +15,28 @@ app = Flask(__name__)
 def home():
     return "🤖 Robô Multimarcas Pro está rodando 100% automatizado!"
 
-# Inicialização do Firebase
-if not firebase_admin._apps:
-    cred_json = os.environ.get("FIREBASE_CREDENTIALS_JSON")
-    if cred_json:
-        cred_dict = json.loads(cred_json)
-        cred = credentials.Certificate(cred_dict)
-        firebase_admin.initialize_app(cred)
-    else:
-        cred = credentials.Certificate("firebase_credentials.json")
-        firebase_admin.initialize_app(cred)
-
-db = firestore.client()
+# Inicialização Segura do Firebase
+db = None
+try:
+    if not firebase_admin._apps:
+        cred_json = os.environ.get("FIREBASE_CREDENTIALS_JSON")
+        if cred_json:
+            cred_dict = json.loads(cred_json)
+            cred = credentials.Certificate(cred_dict)
+            firebase_admin.initialize_app(cred)
+        else:
+            # Tenta buscar arquivo local caso exista
+            cred = credentials.Certificate("firebase_credentials.json")
+            firebase_admin.initialize_app(cred)
+    db = firestore.client()
+    print("🔥 Firebase conectado com sucesso!")
+except Exception as e:
+    print(f"⚠️ Aviso na inicialização do Firebase: {e}")
 
 def carregar_configuracoes_natura():
     """Lê as configurações da Natura salvas no Firebase."""
+    if not db:
+        return None
     try:
         doc_ref = db.collection("configuracoes").doc("natura_settings")
         doc = doc_ref.get()
@@ -60,6 +67,10 @@ def calcular_intervalo_segundos(frequencia, detalhe):
 
 def enviar_telegram(token, channel_id, mensagem, foto_url=None):
     """Envia a oferta formatada para o canal do Telegram."""
+    if not token or not channel_id:
+        print("⚠️ Token ou Channel ID do Telegram não configurados.")
+        return {"ok": False}
+        
     if foto_url:
         url = f"https://api.telegram.org/bot{token}/sendPhoto"
         payload = {
@@ -85,22 +96,24 @@ def enviar_telegram(token, channel_id, mensagem, foto_url=None):
 
 def salvar_produto_na_loja(produto_data):
     """Salva o produto na coleção 'products' da vitrine do GitHub Pages."""
+    if not db:
+        return
     try:
         db.collection("products").add(produto_data)
         print("✅ Produto sincronizado com sucesso na Loja Digital!")
     except Exception as e:
         print(f"❌ Erro ao salvar produto na loja: {e}")
 
-def loop_automatico_robô():
+def loop_automatico_robo():
     """Loop contínuo que roda em segundo plano de forma autônoma."""
     print("🚀 Robô em segundo plano iniciado com sucesso!")
-    time.sleep(10) # Aguarda o sistema estabilizar
+    time.sleep(15) # Aguarda o sistema estabilizar
     
     while True:
         try:
             config = carregar_configuracoes_natura()
             if not config:
-                print("⚠️ Configurações da Natura não encontradas. Aguardando...")
+                print("⚠️ Configurações da Natura não encontradas no Firebase. Aguardando...")
                 time.sleep(60)
                 continue
 
@@ -114,7 +127,7 @@ def loop_automatico_robô():
             
             print(f"🔄 Executando ciclo Natura... Próximo em {intervalo_segundos}s.")
             
-            # Dados simulados do produto com o cálculo do cupom CLIENTEVIP (10% OFF)
+            # Dados do produto com o cálculo do cupom CLIENTEVIP (10% OFF)
             nome_produto = "Deo Parfum Essencial Exclusivo Masculino 100ml"
             preco_original = 180.00
             desconto_percentual = 10
@@ -168,7 +181,7 @@ def loop_automatico_robô():
 
 if __name__ == "__main__":
     # Inicia o robô em uma Thread separada rodando em segundo plano
-    t = Thread(target=loop_automatico_robô)
+    t = Thread(target=loop_automatico_robo)
     t.daemon = True
     t.start()
     
