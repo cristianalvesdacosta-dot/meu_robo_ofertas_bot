@@ -30,7 +30,7 @@
         .btn-test:hover { background-color: #2563eb; }
         .btn-logout { background-color: transparent; color: #ef4444; border: 1px solid #ef4444; margin-top: 15px; }
         .btn-logout:hover { background-color: rgba(239, 68, 68, 0.1); }
-        #status-msg { text-align: center; margin-top: 15px; font-size: 0.85rem; }
+        #status-msg { text-align: center; margin-top: 15px; font-size: 0.95rem; font-weight: bold; padding: 10px; border-radius: 6px; display: none; }
     </style>
 </head>
 <body>
@@ -50,13 +50,13 @@
         </div>
 
         <div class="form-group">
-            <label for="aff-link">Seu Link de Afiliado Shopee</label>
+            <label for="aff-link">Seu Link de Afiliado Shopee (Fixo para todas as ofertas)</label>
             <input type="text" id="aff-link" value="https://s.shopee.com.br/6VOwp1jg5L">
         </div>
 
-        <div class="section-title">📅 Dias de Funcionamento</div>
+        <div class="section-title">📅 Dias de Funcionamento Automático</div>
         <div class="form-group">
-            <label>Selecione os dias em que o robô deve enviar ofertas:</label>
+            <label>Selecione os dias em que o robô deve varrer e enviar:</label>
             <div class="days-container">
                 <label class="day-checkbox"><input type="checkbox" name="dia" value="Seg" checked> Seg</label>
                 <label class="day-checkbox"><input type="checkbox" name="dia" value="Ter" checked> Ter</label>
@@ -68,11 +68,11 @@
             </div>
         </div>
 
-        <div class="section-title">📦 Volume & Frequência de Postagens</div>
+        <div class="section-title">📦 Volume & Frequência da Varredura</div>
         <div class="row">
             <div class="form-group">
-                <label for="qtd">Quantidade / Limite</label>
-                <input type="text" id="qtd" value="50" placeholder="Ex: 50 ou 'Infinito'">
+                <label for="qtd">Quantidade por Ciclo</label>
+                <input type="text" id="qtd" value="50" placeholder="Ex: 50 ou Infinito">
             </div>
             <div class="form-group">
                 <label for="freq">Base de Frequência</label>
@@ -126,7 +126,7 @@
             const input = document.getElementById('detalhe-freq');
 
             if (freq === 'Por Hora') {
-                label.innerText = "Intervalo (Ex: A cada 1 hora, a cada 2 horas)";
+                label.innerText = "Intervalo (Ex: A cada 1 hora)";
                 input.value = "1 hora";
             } else if (freq === 'Por Dia') {
                 label.innerText = "Volume ou Intervalo Diário (Ex: 10 por dia)";
@@ -152,6 +152,10 @@
             });
 
             const msgDiv = document.getElementById('status-msg');
+            msgDiv.style.display = "block";
+            msgDiv.style.backgroundColor = "#334155";
+            msgDiv.style.color = "#38bdf8";
+            msgDiv.innerText = "Salvando configurações na nuvem...";
 
             db.collection("configuracoes").doc("bot_settings").set({
                 telegram_token: token,
@@ -165,12 +169,14 @@
                 atualizado_em: new Date()
             })
             .then(() => {
+                msgDiv.style.backgroundColor = "rgba(16, 185, 129, 0.2)";
                 msgDiv.style.color = "#10b981";
-                msgDiv.innerText = "Configurações e regras salvas com sucesso na nuvem!";
+                msgDiv.innerText = "✅ Configurações salvas com sucesso no Firebase!";
             })
             .catch((error) => {
+                msgDiv.style.backgroundColor = "rgba(239, 68, 68, 0.2)";
                 msgDiv.style.color = "#ef4444";
-                msgDiv.innerText = "Erro ao salvar: " + error.message;
+                msgDiv.innerText = "❌ Erro ao salvar: " + error.message;
             });
         }
 
@@ -181,19 +187,23 @@
             const msgDiv = document.getElementById('status-msg');
 
             if (!token || !channel) {
+                msgDiv.style.display = "block";
+                msgDiv.style.backgroundColor = "rgba(239, 68, 68, 0.2)";
                 msgDiv.style.color = "#ef4444";
                 msgDiv.innerText = "Preencha o Token e o ID do Canal antes de testar!";
                 return;
             }
 
+            msgDiv.style.display = "block";
+            msgDiv.style.backgroundColor = "#334155";
             msgDiv.style.color = "#38bdf8";
             msgDiv.innerText = "A enviar oferta de teste...";
 
             const textoTeste = "🔥 *ACHADO EXCLUSIVO - 50% OFF!*\n\n" +
-                               "📱 *Smartphone Super Econômico*\n" +
-                               "💰 De R$ 1.200,00 por apenas *R$ 599,00*\n\n" +
+                               "📱 *Produto de Demonstração Automática*\n" +
+                               "💰 De R$ 200,00 por apenas *R$ 99,00*\n\n" +
                                "🔗 *Compre com desconto aqui:*\n" + (affLink || "https://s.shopee.com.br/6VOwp1jg5L") + "\n\n" +
-                               "⚡ _Oferta verificada e com preço imperdível!_";
+                               "⚡ _O robô vai varrer e enviar ofertas assim automaticamente!_";
             
             const url = `https://api.telegram.org/bot${token}/sendMessage`;
 
@@ -209,14 +219,17 @@
             .then(response => response.json())
             .then(data => {
                 if (data.ok) {
+                    msgDiv.style.backgroundColor = "rgba(16, 185, 129, 0.2)";
                     msgDiv.style.color = "#10b981";
-                    msgDiv.innerText = "✅ Oferta de teste enviada com sucesso para o Telegram!";
+                    msgDiv.innerText = "✅ Mensagem de teste enviada com sucesso!";
                 } else {
+                    msgDiv.style.backgroundColor = "rgba(239, 68, 68, 0.2)";
                     msgDiv.style.color = "#ef4444";
                     msgDiv.innerText = "❌ Erro do Telegram: " + data.description;
                 }
             })
             .catch(error => {
+                msgDiv.style.backgroundColor = "rgba(239, 68, 68, 0.2)";
                 msgDiv.style.color = "#ef4444";
                 msgDiv.innerText = "❌ Erro de rede: " + error.message;
             });
